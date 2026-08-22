@@ -5,9 +5,7 @@ class RouteNames {
 
   static const String splash = '/splash';
   static const String welcome = '/welcome';
-
-  // Registered here ahead of time so `AppRouter` has real destinations to
-  // point at; the screens themselves are honest "arriving in Phase N"
-  // placeholders until their phase lands.
   static const String heroSelection = '/hero-selection';
+  static const String home = '/home';
+  static const String adventureMap = '/adventure-map';
 }

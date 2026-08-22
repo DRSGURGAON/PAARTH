@@ -4,7 +4,7 @@ Built one phase at a time; each phase must compile (`flutter analyze`
 clean, `flutter test` green) before the next begins.
 
 - [x] **Phase 1** — Project setup + architecture + theme + navigation
-- [ ] **Phase 2** — Hero + home + adventure map
+- [x] **Phase 2** — Hero + home + adventure map
 - [ ] **Phase 3** — Quest engine
 - [ ] **Phase 4** — Math Dash mini-game
 - [ ] **Phase 5** — Memory Master + Pattern Power mini-games

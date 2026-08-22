@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../features/adventure_map/adventure_map_screen.dart';
+import '../../features/home/home_screen.dart';
+import '../../features/player/hero_selection_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/welcome/welcome_screen.dart';
-import '../../shared/widgets/placeholder_screen.dart';
 import 'route_names.dart';
 
 /// Single source of truth for turning a route name into a screen.
@@ -19,14 +21,11 @@ class AppRouter {
       case RouteNames.welcome:
         return _pageRoute(const WelcomeScreen(), settings);
       case RouteNames.heroSelection:
-        return _pageRoute(
-          const PlaceholderScreen(
-            title: 'Hero Selection',
-            arrivingIn: 'Arriving in Phase 2 — pick your hero and start '
-                'your adventure!',
-          ),
-          settings,
-        );
+        return _pageRoute(const HeroSelectionScreen(), settings);
+      case RouteNames.home:
+        return _pageRoute(const HomeScreen(), settings);
+      case RouteNames.adventureMap:
+        return _pageRoute(const AdventureMapScreen(), settings);
       default:
         return _pageRoute(
           Scaffold(
