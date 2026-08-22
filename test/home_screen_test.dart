@@ -32,4 +32,26 @@ void main() {
     // would otherwise collide with the pushed screen's own AppBar title.
     expect(find.text('Visit Shop'), findsOneWidget);
   });
+
+  testWidgets('the parent-zone entry opens the gate, not the dashboard '
+      'directly', (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(
+      AppScope(
+        storage: storage,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          onGenerateRoute: AppRouter.generateRoute,
+          home: const HomeScreen(),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('parent_zone_entry')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('For Grown-Ups'), findsOneWidget);
+    expect(find.text('Parent Zone'), findsNothing);
+  });
 }

@@ -13,4 +13,6 @@ class RouteNames {
   static const String companions = '/companions';
   static const String room = '/room';
   static const String shop = '/shop';
+  static const String parentGate = '/parent-gate';
+  static const String parentZone = '/parent-zone';
 }

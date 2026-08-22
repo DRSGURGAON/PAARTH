@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 9 of 13 — Player room + character customization
+## Status: Phase 10 of 13 — Parent Zone
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -187,8 +187,37 @@ Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
   and its Shop hand-off, Hero Selection's shop-swatch appearance and
   save, and a regression test for the avatar-color bug above
 
-Not built yet: Parent Zone, full offline-persistence hardening. Those
-land in Phases 10–13.
+**Phase 10** —
+- `PlayTimeTracker`: records real foreground play time off actual
+  app-lifecycle resume/pause transitions (no periodic timer, so
+  nothing is left running if the app — or a test — tears the widget
+  tree down mid-session), persisted through the new
+  `PlayTimeRepository`
+- A "For grown-ups" gate (small, muted shield icon on Home, not a big
+  colorful button a child would be drawn to tap) — a two-digit ×
+  one-digit multiplication problem well beyond Class 2 mental math; a
+  wrong attempt swaps in a fresh problem instead of letting it be
+  brute-forced
+- **Parent Zone dashboard**: play time, quests completed, a level bar
+  per subject (reusing the same `DifficultyTracker` the mini-games
+  already write to), and a recommended-practice suggestion — the
+  subject with the lowest level, ties broken deterministically. Every
+  number is read live from the repositories the game itself writes to;
+  there's no separate reporting copy that could drift
+- No purchase flow exists yet to gate (Phase 9's shop only spends
+  coins, never real money), so the brief's "future purchases live
+  behind this gate" is a placement note for later, not something built
+  now
+- Tests: gate-challenge generator correctness (operand ranges,
+  determinism), play-time repository persistence, the tracker's
+  resume/pause/dispose accounting (including that backgrounded time
+  never counts and a second pause without a resume can't double-count),
+  the duration formatter's rounding, the gate's wrong-answer/
+  fresh-challenge/correct-answer flow, and the dashboard's stat and
+  recommendation display against seeded progress
+
+Not built yet: full offline-persistence hardening (Phase 11), polish
+(Phase 12), and the Android release build (Phase 13).
 
 ## First-time setup
 
@@ -291,8 +320,19 @@ iOS support is architected for but not built yet — see the brief).
     Your Hero: any hair/outfit/shoes/backpack color you bought shows
     up as an extra swatch alongside the free ones, and the avatar
     actually renders in that color once picked and saved.
-26. `flutter test` passes (all widget + unit tests).
-27. `flutter analyze` reports no errors.
+26. On Home, tap the small grey shield icon (top-left, deliberately not
+    a big colorful button): a "For Grown-Ups" screen asks a
+    multiplication question. Enter the wrong answer — a gentle "Not
+    quite" message appears and the question changes to a new one (it
+    can't be brute-forced by retrying the same number).
+27. Enter the right answer: **Parent Zone** opens, showing play time,
+    quests completed, a level bar for each subject, and a recommended
+    subject to practice next.
+28. Play for a bit, then background/reopen the app (or just close and
+    reopen it) — play time in Parent Zone increases to reflect real
+    time spent in the app.
+29. `flutter test` passes (all widget + unit tests).
+30. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -306,6 +346,8 @@ lib/
     navigation/            # route names + route generator
     storage/               # LocalStorageService abstraction + impl
     theme/                 # colors + ThemeData
+    tracking/                # PlayTimeTracker (app-lifecycle play time)
+    utils/                   # DurationFormatter
     audio/                 # (Phase 12)
   features/
     splash/
@@ -319,15 +361,16 @@ lib/
     companions/                 # "My Companions" selection screen
     room/                    # "My Room" decoration screen
     shop/                    # coin shop screen
-    parent_zone/             # (Phase 10)
+    parent_zone/             # parent gate + Parent Zone dashboard
   game/
-    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, Companion, ShopItem, RoomProfile, ...
+    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, Companion, ShopItem, RoomProfile, ParentGateChallenge, ...
     data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog, CompanionCatalog, ShopCatalog
     repositories/            # HeroRepository, ProgressRepository, CoinRepository,
                               # QuestRepository, MiniGameRepository, CompanionRepository,
-                              # ShopRepository, RoomRepository
+                              # ShopRepository, RoomRepository, PlayTimeRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
-    systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators
+    systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators,
+                              # ParentGateChallengeGenerator
     quests/                  # JungleQuests content (10 quests, data only)
   shared/
     widgets/                 # BigRoundedButton, PlaceholderScreen, ...

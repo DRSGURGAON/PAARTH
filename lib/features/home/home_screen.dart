@@ -49,6 +49,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openParentGate() async {
+    await Navigator.of(context).pushNamed(RouteNames.parentGate);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
@@ -71,18 +76,29 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _CurrencyBadge(
-                    icon: Icons.star_rounded,
-                    color: AppColors.star,
-                    value: stars,
+                  IconButton(
+                    key: const ValueKey('parent_zone_entry'),
+                    onPressed: _openParentGate,
+                    icon: const Icon(Icons.shield_outlined),
+                    color: Colors.grey.shade500,
+                    tooltip: 'For grown-ups',
                   ),
-                  const SizedBox(width: 10),
-                  _CurrencyBadge(
-                    icon: Icons.monetization_on_rounded,
-                    color: AppColors.coin,
-                    value: coins,
+                  Row(
+                    children: [
+                      _CurrencyBadge(
+                        icon: Icons.star_rounded,
+                        color: AppColors.star,
+                        value: stars,
+                      ),
+                      const SizedBox(width: 10),
+                      _CurrencyBadge(
+                        icon: Icons.monetization_on_rounded,
+                        color: AppColors.coin,
+                        value: coins,
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -5,6 +5,8 @@ import '../../features/collection/collection_screen.dart';
 import '../../features/companions/companion_select_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mini_games/mini_games_screen.dart';
+import '../../features/parent_zone/parent_gate_screen.dart';
+import '../../features/parent_zone/parent_zone_screen.dart';
 import '../../features/player/hero_selection_screen.dart';
 import '../../features/room/room_screen.dart';
 import '../../features/shop/shop_screen.dart';
@@ -41,6 +43,10 @@ class AppRouter {
         return _pageRoute(const RoomScreen(), settings);
       case RouteNames.shop:
         return _pageRoute(const ShopScreen(), settings);
+      case RouteNames.parentGate:
+        return _pageRoute(const ParentGateScreen(), settings);
+      case RouteNames.parentZone:
+        return _pageRoute(const ParentZoneScreen(), settings);
       default:
         return _pageRoute(
           Scaffold(
