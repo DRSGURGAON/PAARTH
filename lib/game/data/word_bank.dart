@@ -51,7 +51,7 @@ class WordBank {
     WordPuzzle(emoji: '🐑', word: 'SHEEP'),
     WordPuzzle(emoji: '🐳', word: 'WHALE'),
     WordPuzzle(emoji: '🏠', word: 'HOUSE'),
-    WordPuzzle(emoji: '🦑', word: 'CHAIR'),
+    WordPuzzle(emoji: '🪑', word: 'CHAIR'),
     WordPuzzle(emoji: '🕐', word: 'CLOCK'),
     WordPuzzle(emoji: '🍎', word: 'APPLE'),
     WordPuzzle(emoji: '🍇', word: 'GRAPE'),
