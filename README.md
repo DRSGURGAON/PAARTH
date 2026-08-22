@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 5 of 13 — Memory Master + Pattern Power mini-games
+## Status: Phase 6 of 13 — Word Builder + Find & Discover mini-games
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -77,8 +77,30 @@ Jungle Adventure map with star-gated locked/unlocked locations.
   real repeating unit), and deterministic widget tests including one
   that explicitly waits out a round's study timer before answering
 
-Not built yet: Word Builder / Find & Discover mini-games, coins/badges,
-companions, player room, Parent Zone. Those land in Phases 6–13.
+**Phase 6** —
+- `WordBank` + `WordPuzzleGenerator`: curated emoji↔word pairs (3/4/5
+  letters by level, no ambiguous emoji-to-word pairings), plus letter
+  scrambling
+- Word Builder screen: tap scrambled letter tiles into order to spell
+  the pictured word; tapping a placed tile returns it (always
+  fixable); 6 rounds, 4+ first-try = +1 ⭐
+- `FindSceneGenerator`: scatters a target object among decoys into one
+  shuffled scene
+- Find & Discover screen: tap every copy of the target; wrong taps
+  don't block progress, they just cost that scene's "clean" bonus; 4
+  scenes (busier each round), 3+ clean = +1 ⭐
+- Mini-Games hub now lists all five built games
+- Tests: word-length/emoji sanity + scramble correctness, scene
+  target/decoy correctness, and deterministic widget tests for both
+  screens (perfect play, retry-after-mistake, double-tap no-ops)
+
+**Known gap, not silently absorbed into this phase:** the design
+brief's Quick Challenge mini-game type (section 21's "10 Quick
+Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
+13-phase list — it needs to be explicitly scheduled.
+
+Not built yet: coins/badges, companions, player room, Parent Zone.
+Those land in Phases 7–13.
 
 ## First-time setup
 
@@ -140,10 +162,16 @@ iOS support is architected for but not built yet — see the brief).
     what you saw/how many). 4 of 5 first-try correct earns a ⭐.
 11. Try **Pattern Power**: a repeating emoji pattern with a "❓" at the
     end — tap what comes next. 6 of 8 first-try correct earns a ⭐.
-12. Close and reopen the app: hero, stars, completed quests and
+12. Try **Word Builder**: an emoji (e.g. 🐶) with scrambled letter
+    tiles below — tap them in order to spell the word; tap a placed
+    letter to undo it. 4 of 6 first-try correct earns a ⭐.
+13. Try **Find & Discover**: a grid scattered with a target object
+    (e.g. "Find 2 bananas!") among decoys — tap every copy; a wrong
+    tap flashes red but doesn't stop you. 3 of 4 clean scenes earns a ⭐.
+14. Close and reopen the app: hero, stars, completed quests and
     difficulty levels all persist.
-13. `flutter test` passes (all widget + unit tests).
-14. `flutter analyze` reports no errors.
+15. `flutter test` passes (all widget + unit tests).
+16. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -165,15 +193,15 @@ lib/
     home/
     adventure_map/
     quests/                  # quest list / intro / play / celebration
-    mini_games/              # hub + Math Dash / Memory Master / Pattern Power
+    mini_games/              # hub + all 5 mini-games
     room/                    # (Phase 9)
     parent_zone/             # (Phase 10)
   game/
-    models/                 # HeroProfile, WorldLocation, Quest, ...
-    data/                    # HeroCustomizationCatalog
+    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, ...
+    data/                    # HeroCustomizationCatalog, WordBank
     repositories/            # HeroRepository, ProgressRepository, QuestRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
-    systems/                 # QuestEngine, DifficultyTracker, Math/Memory/Pattern generators
+    systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators
     quests/                  # JungleQuests content (10 quests, data only)
     rewards/                   # (Phase 7)
     companions/                 # (Phase 8)

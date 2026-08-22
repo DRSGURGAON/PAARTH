@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'find_discover_screen.dart';
 import 'math_dash_screen.dart';
 import 'memory_master_screen.dart';
 import 'pattern_power_screen.dart';
+import 'word_builder_screen.dart';
 
-/// Hub listing the playable mini-games. Only games that actually exist
-/// appear here — Word Builder and Find & Discover cards get added when
-/// Phase 6 lands, never before.
+/// Hub listing the playable mini-games. Five of the six V1 mini-game
+/// types from the design brief are here now (Math Dash, Memory Master,
+/// Pattern Power, Word Builder, Find & Discover). Quick Challenge
+/// (section 21's 10-challenge minimum) has no phase of its own in the
+/// 13-phase plan — flagged for the human to schedule, not silently
+/// folded into this phase.
 class MiniGamesScreen extends StatelessWidget {
   const MiniGamesScreen({super.key});
 
@@ -56,6 +61,34 @@ class MiniGamesScreen extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const PatternPowerScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MiniGameCard(
+              title: 'Word Builder',
+              subtitle: 'Spell the picture!',
+              icon: Icons.spellcheck_rounded,
+              color: AppColors.leafGreen,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WordBuilderScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MiniGameCard(
+              title: 'Find & Discover',
+              subtitle: 'Tap to find everything!',
+              icon: Icons.search_rounded,
+              color: AppColors.sunshineYellow,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const FindDiscoverScreen(),
                   ),
                 );
               },

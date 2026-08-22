@@ -8,7 +8,7 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 3** — Quest engine
 - [x] **Phase 4** — Math Dash mini-game
 - [x] **Phase 5** — Memory Master + Pattern Power mini-games
-- [ ] **Phase 6** — Word Builder + Find & Discover mini-games
+- [x] **Phase 6** — Word Builder + Find & Discover mini-games
 - [ ] **Phase 7** — Rewards (stars, coins, badges)
 - [ ] **Phase 8** — Companions
 - [ ] **Phase 9** — Player room + character customization
@@ -21,3 +21,7 @@ V1 scope: Jungle Adventure (fully playable) + the start of Space Mission.
 Worlds 3–5 (Dino Island, Magic Kingdom, Robot City) are designed in the
 brief but intentionally not built in V1 — the architecture must allow
 adding them later without rewriting existing code.
+
+**Open gap:** the brief's Quick Challenge mini-game type (20–30s
+tap/count/match/avoid activities; section 21 wants 10 of them) has no
+phase of its own here. Needs a decision on which phase absorbs it.
