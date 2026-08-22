@@ -9,7 +9,7 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 4** — Math Dash mini-game
 - [x] **Phase 5** — Memory Master + Pattern Power mini-games
 - [x] **Phase 6** — Word Builder + Find & Discover mini-games
-- [ ] **Phase 7** — Rewards (stars, coins, badges)
+- [x] **Phase 7** — Rewards (stars, coins, badges)
 - [ ] **Phase 8** — Companions
 - [ ] **Phase 9** — Player room + character customization
 - [ ] **Phase 10** — Parent Zone

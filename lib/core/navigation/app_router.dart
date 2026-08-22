@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/adventure_map/adventure_map_screen.dart';
+import '../../features/collection/collection_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mini_games/mini_games_screen.dart';
 import '../../features/player/hero_selection_screen.dart';
@@ -29,6 +30,8 @@ class AppRouter {
         return _pageRoute(const AdventureMapScreen(), settings);
       case RouteNames.miniGames:
         return _pageRoute(const MiniGamesScreen(), settings);
+      case RouteNames.collection:
+        return _pageRoute(const CollectionScreen(), settings);
       default:
         return _pageRoute(
           Scaffold(

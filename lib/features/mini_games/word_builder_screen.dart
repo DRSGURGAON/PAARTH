@@ -7,6 +7,8 @@ import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
 import '../../game/models/word_puzzle.dart';
+import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
 import '../../game/systems/quest_engine.dart';
@@ -35,6 +37,7 @@ class WordBuilderScreen extends StatefulWidget {
 
   static const int roundLength = 6;
   static const int starThreshold = 4;
+  static const int coinReward = 5;
 
   @override
   State<WordBuilderScreen> createState() => WordBuilderScreenState();
@@ -47,6 +50,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
   late WordPuzzleGenerator _generator;
   late DifficultyTracker _tracker;
   late ProgressRepository _progressRepository;
+  late CoinRepository _coinRepository;
+  late MiniGameRepository _miniGameRepository;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
@@ -73,6 +78,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
     _generator = WordPuzzleGenerator(random: widget.random);
     _tracker = DifficultyTracker(storage);
     _progressRepository = ProgressRepository(storage);
+    _coinRepository = CoinRepository(storage);
+    _miniGameRepository = MiniGameRepository(storage);
     _loaded = true;
   }
 
@@ -140,6 +147,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
     if (_roundNumber + 1 >= WordBuilderScreen.roundLength) {
       if (_score >= WordBuilderScreen.starThreshold) {
         await _progressRepository.addStars(1);
+        await _coinRepository.addCoins(WordBuilderScreen.coinReward);
+        await _miniGameRepository.markStarEarned(MiniGameIds.wordBuilder);
         _starEarned = true;
       }
       if (!mounted) return;
@@ -367,7 +376,7 @@ class _ResultsView extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           starEarned
-              ? 'Amazing! You earned +1 ⭐'
+              ? 'Amazing! You earned +1 ⭐  +${WordBuilderScreen.coinReward} 🪙'
               : 'Great effort! Try again to earn a ⭐',
           textAlign: TextAlign.center,
           style: textTheme.bodyLarge,

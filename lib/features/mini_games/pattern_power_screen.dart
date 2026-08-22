@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
+import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
 import '../../game/systems/pattern_question_generator.dart';
@@ -23,6 +25,7 @@ class PatternPowerScreen extends StatefulWidget {
 
   static const int roundLength = 8;
   static const int starThreshold = 6;
+  static const int coinReward = 5;
 
   @override
   State<PatternPowerScreen> createState() => PatternPowerScreenState();
@@ -35,6 +38,8 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
   late PatternQuestionGenerator _generator;
   late DifficultyTracker _tracker;
   late ProgressRepository _progressRepository;
+  late CoinRepository _coinRepository;
+  late MiniGameRepository _miniGameRepository;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
@@ -56,6 +61,8 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
     _generator = PatternQuestionGenerator(random: widget.random);
     _tracker = DifficultyTracker(storage);
     _progressRepository = ProgressRepository(storage);
+    _coinRepository = CoinRepository(storage);
+    _miniGameRepository = MiniGameRepository(storage);
     _loaded = true;
   }
 
@@ -96,6 +103,8 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
     if (_questionNumber + 1 >= PatternPowerScreen.roundLength) {
       if (_score >= PatternPowerScreen.starThreshold) {
         await _progressRepository.addStars(1);
+        await _coinRepository.addCoins(PatternPowerScreen.coinReward);
+        await _miniGameRepository.markStarEarned(MiniGameIds.patternPower);
         _starEarned = true;
       }
       if (!mounted) return;
@@ -280,7 +289,7 @@ class _ResultsView extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           starEarned
-              ? 'Amazing! You earned +1 ⭐'
+              ? 'Amazing! You earned +1 ⭐  +${PatternPowerScreen.coinReward} 🪙'
               : 'Great effort! Try again to earn a ⭐',
           textAlign: TextAlign.center,
           style: textTheme.bodyLarge,

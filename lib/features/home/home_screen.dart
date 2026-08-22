@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/repositories/coin_repository.dart';
 import '../../game/repositories/hero_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../player/hero_avatar_preview.dart';
 
 /// Landing spot after the hero is created: shows the hero, current
-/// stars, and the single next action — head to the Adventure Map.
-/// Stateful so the star badge refreshes when the child comes back from
-/// an adventure with new stars.
+/// stars and coins, and the next actions — Adventure Map, Mini-Games,
+/// and the badge Collection. Stateful so the currency badges refresh
+/// when the child comes back from earning more.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -30,11 +31,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openCollection() async {
+    await Navigator.of(context).pushNamed(RouteNames.collection);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
     final profile = HeroRepository(storage).load();
     final stars = ProgressRepository(storage).stars;
+    final coins = CoinRepository(storage).coins;
 
     return Scaffold(
       body: SafeArea(
@@ -42,9 +49,21 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: _StarBadge(stars: stars),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _CurrencyBadge(
+                    icon: Icons.star_rounded,
+                    color: AppColors.star,
+                    value: stars,
+                  ),
+                  const SizedBox(width: 10),
+                  _CurrencyBadge(
+                    icon: Icons.monetization_on_rounded,
+                    color: AppColors.coin,
+                    value: coins,
+                  ),
+                ],
               ),
               const Spacer(),
               HeroAvatarPreview(profile: profile, size: 200),
@@ -68,6 +87,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: AppColors.grapePurple,
                 onPressed: _openMiniGames,
               ),
+              const SizedBox(height: 12),
+              BigRoundedButton(
+                label: 'My Collection',
+                icon: Icons.emoji_events_rounded,
+                backgroundColor: AppColors.coral,
+                onPressed: _openCollection,
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -77,10 +103,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _StarBadge extends StatelessWidget {
-  const _StarBadge({required this.stars});
+class _CurrencyBadge extends StatelessWidget {
+  const _CurrencyBadge({
+    required this.icon,
+    required this.color,
+    required this.value,
+  });
 
-  final int stars;
+  final IconData icon;
+  final Color color;
+  final int value;
 
   @override
   Widget build(BuildContext context) {
@@ -100,10 +132,10 @@ class _StarBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, color: AppColors.star),
+          Icon(icon, color: color),
           const SizedBox(width: 6),
           Text(
-            '$stars',
+            '$value',
             style: Theme.of(context)
                 .textTheme
                 .titleLarge

@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 6 of 13 — Word Builder + Find & Discover mini-games
+## Status: Phase 7 of 13 — Rewards system (stars, coins, badges)
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -94,13 +94,38 @@ Jungle Adventure map with star-gated locked/unlocked locations.
   target/decoy correctness, and deterministic widget tests for both
   screens (perfect play, retry-after-mistake, double-tap no-ops)
 
-**Known gap, not silently absorbed into this phase:** the design
+**Known gap, not silently absorbed into any phase:** the design
 brief's Quick Challenge mini-game type (section 21's "10 Quick
 Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
 13-phase list — it needs to be explicitly scheduled.
 
-Not built yet: coins/badges, companions, player room, Parent Zone.
-Those land in Phases 7–13.
+**Phase 7** —
+- `CoinRepository`: a second currency alongside stars (brief section
+  11) — stars still gate map progression, coins are the future shop
+  currency for Phase 9's cosmetics
+- Quests now award coins too, derived from `starReward` (no edits to
+  the already-verified quest content needed); each mini-game awards a
+  flat coin bonus alongside its star
+- `MiniGameRepository`: tracks which mini-games have had a star earned
+  at least once — the only new fact needed for mini-game badges
+- `BadgeCatalog`: 10 badges (1 per mini-game, first-quest, complete-
+  all-Jungle-quests, 20-star and 20-coin collectors, and a "Super Kid"
+  capstone for earning every other badge). Earned status is **never
+  stored** — it's recomputed live from real quest/mini-game/star/coin
+  data every time, so a badge can't say "earned" for something that
+  didn't happen
+- Collection screen (brief's "🎒 Collection"): a badge grid, earned
+  ones bright with their description, locked ones greyed with a lock
+- Home now shows both currencies and a "My Collection" entry point
+- Tests: coin/mini-game repository correctness, badge-condition
+  correctness for every badge type (including the capstone's
+  earn-everything-else condition), and widget tests verifying the
+  Collection screen's earned/locked split actually matches seeded
+  progress
+
+Not built yet: companions, player room, Parent Zone, coin-spending UI
+(coins accumulate now; Phase 9 builds what they buy). Those land in
+Phases 8–13.
 
 ## First-time setup
 
@@ -168,10 +193,16 @@ iOS support is architected for but not built yet — see the brief).
 13. Try **Find & Discover**: a grid scattered with a target object
     (e.g. "Find 2 bananas!") among decoys — tap every copy; a wrong
     tap flashes red but doesn't stop you. 3 of 4 clean scenes earns a ⭐.
-14. Close and reopen the app: hero, stars, completed quests and
-    difficulty levels all persist.
-15. `flutter test` passes (all widget + unit tests).
-16. `flutter analyze` reports no errors.
+14. Notice both a ⭐ and 🪙 count now show on Home, and every quest /
+    mini-game reward screen shows coins earned alongside stars.
+15. On Home, tap **My Collection**: a grid of badges, all locked at
+    first. Earn a star in any mini-game (or complete a quest) and
+    return here — that badge is now bright with its description, and
+    the "N of 10 badges earned" count at the top updates.
+16. Close and reopen the app: hero, stars, coins, completed quests,
+    mini-game stars, and difficulty levels all persist.
+17. `flutter test` passes (all widget + unit tests).
+18. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -194,16 +225,17 @@ lib/
     adventure_map/
     quests/                  # quest list / intro / play / celebration
     mini_games/              # hub + all 5 mini-games
+    collection/               # badge grid screen
     room/                    # (Phase 9)
     parent_zone/             # (Phase 10)
   game/
-    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, ...
-    data/                    # HeroCustomizationCatalog, WordBank
-    repositories/            # HeroRepository, ProgressRepository, QuestRepository
+    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, ...
+    data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog
+    repositories/            # HeroRepository, ProgressRepository, CoinRepository,
+                              # QuestRepository, MiniGameRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
     systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators
     quests/                  # JungleQuests content (10 quests, data only)
-    rewards/                   # (Phase 7)
     companions/                 # (Phase 8)
   shared/
     widgets/                 # BigRoundedButton, PlaceholderScreen, ...

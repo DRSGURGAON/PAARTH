@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
+import '../../game/repositories/coin_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/systems/quest_engine.dart';
@@ -38,6 +39,7 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
       quest: widget.quest,
       progressRepository: ProgressRepository(storage),
       questRepository: QuestRepository(storage),
+      coinRepository: CoinRepository(storage),
     );
     _loaded = true;
   }
@@ -62,6 +64,7 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
             builder: (_) => QuestCompleteScreen(
               quest: widget.quest,
               starsAwarded: _engine.starsAwarded,
+              coinsAwarded: _engine.coinsAwarded,
             ),
           ),
         );

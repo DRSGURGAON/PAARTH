@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/app.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
+import 'package:super_kid_adventure/game/systems/quest_engine.dart';
 
 import 'support/fake_local_storage_service.dart';
 
@@ -54,9 +55,9 @@ void main() {
     await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
 
-    // Home screen — no stars yet.
+    // Home screen — no stars or coins yet (both currency badges show 0).
     expect(find.text('Ready for adventure?'), findsOneWidget);
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('0'), findsNWidgets(2));
     await tester.tap(find.text('Adventure Map'));
     await tester.pumpAndSettle();
 
@@ -94,9 +95,13 @@ void main() {
       }
     }
 
-    // Celebration screen with the one-time star reward.
+    // Celebration screen with the one-time star + coin reward.
     expect(find.text('Quest Complete!'), findsOneWidget);
-    expect(find.text('+${quest.starReward} ⭐'), findsOneWidget);
+    final expectedCoins = quest.starReward * QuestEngine.coinsPerStar;
+    expect(
+      find.text('+${quest.starReward} ⭐  +$expectedCoins 🪙'),
+      findsOneWidget,
+    );
 
     // Back to the quest list — the quest is now marked completed.
     await tester.tap(find.text('Back to Map'));

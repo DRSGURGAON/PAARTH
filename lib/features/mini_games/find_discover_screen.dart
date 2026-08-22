@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/find_scene.dart';
+import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/find_scene_generator.dart';
 import '../../shared/widgets/big_rounded_button.dart';
@@ -21,6 +23,7 @@ class FindDiscoverScreen extends StatefulWidget {
 
   static const int roundLength = 4;
   static const int starThreshold = 3;
+  static const int coinReward = 5;
 
   /// (targetCount, decoyCount) per round — gets busier as rounds go on.
   static const List<(int, int)> roundConfig = [
@@ -40,6 +43,8 @@ enum _RoundPhase { intro, playing, results }
 class FindDiscoverScreenState extends State<FindDiscoverScreen> {
   late FindSceneGenerator _generator;
   late ProgressRepository _progressRepository;
+  late CoinRepository _coinRepository;
+  late MiniGameRepository _miniGameRepository;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
@@ -59,8 +64,11 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_loaded) return;
+    final storage = AppScope.of(context).storage;
     _generator = FindSceneGenerator(random: widget.random);
-    _progressRepository = ProgressRepository(AppScope.of(context).storage);
+    _progressRepository = ProgressRepository(storage);
+    _coinRepository = CoinRepository(storage);
+    _miniGameRepository = MiniGameRepository(storage);
     _loaded = true;
   }
 
@@ -111,6 +119,8 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
     if (_roundNumber + 1 >= FindDiscoverScreen.roundLength) {
       if (_cleanRounds >= FindDiscoverScreen.starThreshold) {
         await _progressRepository.addStars(1);
+        await _coinRepository.addCoins(FindDiscoverScreen.coinReward);
+        await _miniGameRepository.markStarEarned(MiniGameIds.findDiscover);
         _starEarned = true;
       }
       if (!mounted) return;
@@ -301,7 +311,7 @@ class _ResultsView extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           starEarned
-              ? 'Amazing! You earned +1 ⭐'
+              ? 'Amazing! You earned +1 ⭐  +${FindDiscoverScreen.coinReward} 🪙'
               : 'Great effort! Try again to earn a ⭐',
           textAlign: TextAlign.center,
           style: textTheme.bodyLarge,

@@ -1,4 +1,5 @@
 import '../models/quest.dart';
+import '../repositories/coin_repository.dart';
 import '../repositories/progress_repository.dart';
 import '../repositories/quest_repository.dart';
 
@@ -23,12 +24,21 @@ class QuestEngine {
     required this.quest,
     required ProgressRepository progressRepository,
     required QuestRepository questRepository,
+    required CoinRepository coinRepository,
   })  : _progressRepository = progressRepository,
-        _questRepository = questRepository;
+        _questRepository = questRepository,
+        _coinRepository = coinRepository;
 
   final Quest quest;
   final ProgressRepository _progressRepository;
   final QuestRepository _questRepository;
+  final CoinRepository _coinRepository;
+
+  /// Coins per star awarded on a quest's first clear (brief section 11:
+  /// coins are the shop currency, separate from the stars that gate map
+  /// progression). Derived from `starReward` rather than a per-quest
+  /// field, so existing quest content never needs touching to add coins.
+  static const int coinsPerStar = 3;
 
   /// Gentle, rotating feedback for wrong answers — never "Wrong!" or
   /// "You failed" (design brief section 13).
@@ -44,6 +54,9 @@ class QuestEngine {
   /// Stars actually awarded when the quest completed: the quest's
   /// [Quest.starReward] on a first-time clear, 0 on a replay.
   int starsAwarded = 0;
+
+  /// Coins actually awarded alongside [starsAwarded] — 0 on a replay.
+  int coinsAwarded = 0;
 
   int get currentIndex => _index;
   bool get isComplete => _index >= quest.challenges.length;
@@ -65,8 +78,11 @@ class QuestEngine {
 
     if (!_questRepository.isCompleted(quest.id)) {
       await _progressRepository.addStars(quest.starReward);
+      final coins = quest.starReward * coinsPerStar;
+      await _coinRepository.addCoins(coins);
       await _questRepository.markCompleted(quest.id);
       starsAwarded = quest.starReward;
+      coinsAwarded = coins;
     }
     return AnswerResult.completed;
   }

@@ -10,11 +10,13 @@ class QuestCompleteScreen extends StatefulWidget {
   const QuestCompleteScreen({
     required this.quest,
     required this.starsAwarded,
+    required this.coinsAwarded,
     super.key,
   });
 
   final Quest quest;
   final int starsAwarded;
+  final int coinsAwarded;
 
   @override
   State<QuestCompleteScreen> createState() => _QuestCompleteScreenState();
@@ -95,7 +97,7 @@ class _QuestCompleteScreenState extends State<QuestCompleteScreen>
                 ),
                 child: Text(
                   isFirstClear
-                      ? '+${widget.starsAwarded} ⭐'
+                      ? '+${widget.starsAwarded} ⭐  +${widget.coinsAwarded} 🪙'
                       : 'Great practice! 🌟',
                   style: textTheme.headlineMedium,
                 ),
