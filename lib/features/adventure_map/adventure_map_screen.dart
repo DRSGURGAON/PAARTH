@@ -5,12 +5,12 @@ import '../../core/theme/app_colors.dart';
 import '../../game/models/world_location.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/worlds/jungle_world.dart';
-import '../../shared/widgets/placeholder_screen.dart';
+import '../quests/location_quests_screen.dart';
 
 /// The Jungle Adventure world map: a small winding trail of location
 /// nodes rather than a static list, each animating in on entry. Locked
 /// nodes show what's needed to open them; unlocked nodes lead to that
-/// location's quest (arriving in Phase 3).
+/// location's quest list.
 class AdventureMapScreen extends StatefulWidget {
   const AdventureMapScreen({super.key});
 
@@ -47,16 +47,14 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
     super.dispose();
   }
 
-  void _openLocation(WorldLocation location) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PlaceholderScreen(
-          title: location.name,
-          arrivingIn: "Quests arrive in Phase 3 — soon you'll help "
-              '${location.name} with a jungle adventure!',
-        ),
+  Future<void> _openLocation(WorldLocation location) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LocationQuestsScreen(location: location),
       ),
     );
+    // Stars may have been earned inside — refresh lock states on return.
+    if (mounted) setState(() {});
   }
 
   void _showLockedHint(WorldLocation location, int stars) {

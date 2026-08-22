@@ -10,8 +10,20 @@ import '../player/hero_avatar_preview.dart';
 
 /// Landing spot after the hero is created: shows the hero, current
 /// stars, and the single next action — head to the Adventure Map.
-class HomeScreen extends StatelessWidget {
+/// Stateful so the star badge refreshes when the child comes back from
+/// an adventure with new stars.
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Future<void> _openAdventureMap() async {
+    await Navigator.of(context).pushNamed(RouteNames.adventureMap);
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +54,7 @@ class HomeScreen extends StatelessWidget {
                 label: 'Adventure Map',
                 icon: Icons.map_rounded,
                 backgroundColor: AppColors.skyBlue,
-                onPressed: () =>
-                    Navigator.of(context).pushNamed(RouteNames.adventureMap),
+                onPressed: _openAdventureMap,
               ),
               const SizedBox(height: 16),
             ],

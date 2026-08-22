@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 2 of 13 — Hero + home + adventure map
+## Status: Phase 3 of 13 — Quest engine
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -19,24 +19,30 @@ yet), folder architecture, bright rounded large-touch-target theme,
 named-route navigation, `LocalStorageService` abstraction over
 `shared_preferences`.
 
-**Phase 2** —
-- Hero customization: 4 swatch categories (hair/outfit/shoes/backpack),
-  live "paper doll" preview, no text entry or personal info
-  (`HeroProfile`, `HeroRepository`, saved locally)
-- Home screen: hero preview, star count, single "Adventure Map" action
-- Jungle Adventure map: 5 real locations from the design brief, animated
-  entrance, locked/unlocked state driven by `ProgressRepository`'s star
-  count (real logic — just nothing awards stars yet, since that's the
-  quest engine's job in Phase 3)
-- Tapping an unlocked location opens an honest "quest arrives in Phase
-  3" placeholder; tapping a locked one shows an encouraging hint instead
-  of doing nothing
-- Widget tests covering the full flow, plus unit tests for both new
-  repositories and the unlock logic
+**Phase 2** — Hero customization (4 swatch categories, live "paper
+doll" preview, no personal info, saved locally), Home screen, and the
+Jungle Adventure map with star-gated locked/unlocked locations.
 
-Nothing beyond this has been built yet — no quests, no mini-games, no
-companions, no rewards. Those land in Phases 3–13, one phase at a time,
-each verified to compile before moving on.
+**Phase 3** —
+- Quest data model (`Quest` + `ChoiceChallenge`) and a fully
+  unit-tested `QuestEngine`: challenge progression, gentle rotating
+  encouragement on wrong answers (never "Wrong!"), one-time star
+  rewards, replays allowed for practice
+- 10 complete story-driven Jungle quests (2 per location, 3 challenges
+  each) as pure content files — math within 20, patterns, sequences and
+  picture words for Class 2 / age ~7
+- Quest flow screens: location quest list → story intro → play (big
+  visuals, progress dots, story-item reward dialogs) → animated
+  celebration with stars
+- Stars now genuinely accumulate and unlock map locations; content
+  tests prove every location is reachable with the stars earnable
+  before it
+- Challenges are the Phase 3 tap-an-answer type; the richer Math
+  Dash / Memory Master / Word Builder mini-games (Phases 4–6) plug into
+  this same quest flow
+
+Not built yet: dedicated mini-games, coins/badges, companions, player
+room, Parent Zone. Those land in Phases 4–13, one phase at a time.
 
 ## First-time setup
 
@@ -74,18 +80,24 @@ iOS support is architected for but not built yet — see the brief).
 3. Tapping **PLAY** opens **Build Your Hero**: tap swatches in each of
    the 4 rows (Hair/Outfit/Shoes/Backpack) and watch the avatar preview
    above update live.
-4. Tapping **Start Adventure** goes to **Home**: your hero, a star count
-   (0 — nothing awards stars yet), and an **Adventure Map** button.
-5. Tapping **Adventure Map** shows 5 Jungle locations animating in.
-   **Tree House** is unlocked and tappable (opens a "quest arrives in
-   Phase 3" placeholder); the other 4 are locked with a star requirement
-   shown, and tapping one shows a gentle "Earn N more ⭐" hint instead of
-   doing nothing.
-6. Close and reopen the app (or hot-restart): your hero customization is
-   still there (Phase 11's full save system isn't built yet, but this
-   piece of persistence already works).
-7. `flutter test` passes (all widget + unit tests).
-8. `flutter analyze` reports no errors.
+4. Tapping **Start Adventure** goes to **Home**: your hero, a star
+   count, and an **Adventure Map** button.
+5. On the **Adventure Map**, tap **Tree House** → a list of 2 quests.
+   Locked locations still show a gentle "Earn N more ⭐" hint.
+6. Play **Repair the Jungle Bridge**: story intro → 3 challenges with
+   big emoji visuals and tap-to-answer buttons. A wrong answer shows
+   encouragement ("Almost! Let's try again!") and lets you retry; each
+   solved challenge awards a story item (Bridge Piece 1…3); finishing
+   shows a celebration screen with **+2 ⭐**.
+7. Back on the map, your stars now count toward unlocks: after both
+   Tree House quests (4 ⭐), **Monkey Camp** (3 ⭐) unlocks. Completing
+   all 10 quests (20 ⭐) opens every location including the Temple.
+8. Replay a completed quest: it's marked "Completed! Play again for
+   practice" and awards no extra stars.
+9. Close and reopen the app: hero, stars, and completed quests all
+   persist.
+10. `flutter test` passes (all widget + unit tests).
+11. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -106,15 +118,16 @@ lib/
     player/                 # hero selection + avatar preview widget
     home/
     adventure_map/
+    quests/                  # quest list / intro / play / celebration
     room/                    # (Phase 9)
     parent_zone/             # (Phase 10)
   game/
-    models/                 # HeroProfile, WorldLocation, CustomizationOption
+    models/                 # HeroProfile, WorldLocation, Quest, ...
     data/                    # HeroCustomizationCatalog
-    repositories/            # HeroRepository, ProgressRepository
-    worlds/                  # JungleWorld (Space/Dino/Magic/Robot: Phase 2+)
-    systems/                 # (Phase 3+)
-    quests/                  # (Phase 3)
+    repositories/            # HeroRepository, ProgressRepository, QuestRepository
+    worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
+    systems/                 # QuestEngine
+    quests/                  # JungleQuests content (10 quests, data only)
     mini_games/               # (Phase 4-6)
     rewards/                   # (Phase 7)
     companions/                 # (Phase 8)

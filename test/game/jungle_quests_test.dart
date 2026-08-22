@@ -1,0 +1,72 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
+import 'package:super_kid_adventure/game/worlds/jungle_world.dart';
+
+/// Content sanity checks: quests are data, so typos in a content file
+/// (bad correctIndex, unknown location id, unreachable unlock) should
+/// fail a test — not surface as a broken experience for a 7-year-old.
+void main() {
+  group('JungleQuests content', () {
+    test('meets the V1 minimum of 10 complete quests', () {
+      expect(JungleQuests.all.length, greaterThanOrEqualTo(10));
+    });
+
+    test('quest ids are unique', () {
+      final ids = JungleQuests.all.map((q) => q.id).toList();
+
+      expect(ids.toSet().length, ids.length);
+    });
+
+    test('every quest belongs to a real Jungle location', () {
+      final locationIds = JungleWorld.locations.map((l) => l.id).toSet();
+
+      for (final quest in JungleQuests.all) {
+        expect(locationIds, contains(quest.locationId),
+            reason: 'Quest ${quest.id} points at unknown location '
+                '${quest.locationId}');
+      }
+    });
+
+    test('every location has at least one quest', () {
+      for (final location in JungleWorld.locations) {
+        expect(JungleQuests.forLocation(location.id), isNotEmpty,
+            reason: '${location.name} has no quests');
+      }
+    });
+
+    test('every challenge is well-formed', () {
+      for (final quest in JungleQuests.all) {
+        expect(quest.challenges.length, greaterThanOrEqualTo(3),
+            reason: 'Quest ${quest.id} has too few challenges');
+        expect(quest.starReward, greaterThan(0));
+
+        for (final challenge in quest.challenges) {
+          expect(challenge.options.length, greaterThanOrEqualTo(2),
+              reason: 'A challenge in ${quest.id} has too few options');
+          expect(
+            challenge.correctIndex,
+            inInclusiveRange(0, challenge.options.length - 1),
+            reason: 'A challenge in ${quest.id} has an out-of-range '
+                'correctIndex',
+          );
+          expect(challenge.prompt, isNotEmpty);
+        }
+      }
+    });
+
+    test('star economy makes every location reachable', () {
+      // Stars earnable from all locations unlocked before location N
+      // must cover location N's own threshold.
+      for (final location in JungleWorld.locations) {
+        final earnableBefore = JungleWorld.locations
+            .where((l) => l.requiredStars < location.requiredStars)
+            .expand((l) => JungleQuests.forLocation(l.id))
+            .fold<int>(0, (sum, quest) => sum + quest.starReward);
+
+        expect(earnableBefore, greaterThanOrEqualTo(location.requiredStars),
+            reason: '${location.name} needs ${location.requiredStars} '
+                'stars but only $earnableBefore are earnable before it');
+      }
+    });
+  });
+}

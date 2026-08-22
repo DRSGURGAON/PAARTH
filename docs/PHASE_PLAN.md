@@ -5,7 +5,7 @@ clean, `flutter test` green) before the next begins.
 
 - [x] **Phase 1** — Project setup + architecture + theme + navigation
 - [x] **Phase 2** — Hero + home + adventure map
-- [ ] **Phase 3** — Quest engine
+- [x] **Phase 3** — Quest engine
 - [ ] **Phase 4** — Math Dash mini-game
 - [ ] **Phase 5** — Memory Master + Pattern Power mini-games
 - [ ] **Phase 6** — Word Builder + Find & Discover mini-games
