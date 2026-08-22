@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 4 of 13 — Math Dash mini-game
+## Status: Phase 5 of 13 — Memory Master + Pattern Power mini-games
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -59,8 +59,26 @@ Jungle Adventure map with star-gated locked/unlocked locations.
   continuation), and deterministic widget tests for perfect rounds,
   missed rounds and replay
 
-Not built yet: Memory/Pattern/Word/Find mini-games, coins/badges,
-companions, player room, Parent Zone. Those land in Phases 5–13.
+**Phase 5** —
+- `MemoryRoundGenerator`: show-then-hide rounds covering all 4 memory
+  question types from brief section 9B — position, sequence ("what
+  came right after X?"), object ("which did you NOT see?"), and count —
+  item count and study time scale with the shared `DifficultyTracker`
+- `PatternQuestionGenerator`: repeating-unit patterns (unit length 2–3,
+  e.g. ⭐🔵⭐🔵❓ or 🦁🐾🐾🦁🐾🐾❓) also scaled by level
+- Memory Master screen: study phase (items shown, then hidden) → answer
+  → same gentle-retry/reward shape as Math Dash (5 rounds, 4+ first-try
+  = +1 ⭐)
+- Pattern Power screen: same round shape as Math Dash (8 rounds, 6+ =
+  +1 ⭐), reusing `ChallengeCategory.logic`'s difficulty tracking
+- Mini-Games hub now lists all three games
+- Tests: both generators' correctness (position/sequence/object/count
+  answers actually match what was shown; pattern answers continue the
+  real repeating unit), and deterministic widget tests including one
+  that explicitly waits out a round's study timer before answering
+
+Not built yet: Word Builder / Find & Discover mini-games, coins/badges,
+companions, player room, Parent Zone. Those land in Phases 6–13.
 
 ## First-time setup
 
@@ -117,10 +135,15 @@ iOS support is architected for but not built yet — see the brief).
    8 puzzles — small counts appear as countable emoji. Answer 3 in a
    row correctly across rounds and the questions quietly get harder;
    struggle and they ease off.
-10. Close and reopen the app: hero, stars, completed quests and
+10. Back at Mini-Games, try **Memory Master**: watch the emoji shown,
+    they disappear, then answer a question about them (position/order/
+    what you saw/how many). 4 of 5 first-try correct earns a ⭐.
+11. Try **Pattern Power**: a repeating emoji pattern with a "❓" at the
+    end — tap what comes next. 6 of 8 first-try correct earns a ⭐.
+12. Close and reopen the app: hero, stars, completed quests and
     difficulty levels all persist.
-11. `flutter test` passes (all widget + unit tests).
-12. `flutter analyze` reports no errors.
+13. `flutter test` passes (all widget + unit tests).
+14. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -142,7 +165,7 @@ lib/
     home/
     adventure_map/
     quests/                  # quest list / intro / play / celebration
-    mini_games/              # hub + Math Dash (more in Phases 5-6)
+    mini_games/              # hub + Math Dash / Memory Master / Pattern Power
     room/                    # (Phase 9)
     parent_zone/             # (Phase 10)
   game/
@@ -150,7 +173,7 @@ lib/
     data/                    # HeroCustomizationCatalog
     repositories/            # HeroRepository, ProgressRepository, QuestRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
-    systems/                 # QuestEngine, DifficultyTracker, MathQuestionGenerator
+    systems/                 # QuestEngine, DifficultyTracker, Math/Memory/Pattern generators
     quests/                  # JungleQuests content (10 quests, data only)
     rewards/                   # (Phase 7)
     companions/                 # (Phase 8)

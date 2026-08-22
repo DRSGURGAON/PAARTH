@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'math_dash_screen.dart';
+import 'memory_master_screen.dart';
+import 'pattern_power_screen.dart';
 
 /// Hub listing the playable mini-games. Only games that actually exist
-/// appear here — Memory Master, Pattern Power, Word Builder and
-/// Find & Discover cards get added as Phases 5–6 land, never before.
+/// appear here — Word Builder and Find & Discover cards get added when
+/// Phase 6 lands, never before.
 class MiniGamesScreen extends StatelessWidget {
   const MiniGamesScreen({super.key});
 
@@ -26,6 +28,34 @@ class MiniGamesScreen extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const MathDashScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MiniGameCard(
+              title: 'Memory Master',
+              subtitle: 'Watch closely, then remember!',
+              icon: Icons.psychology_rounded,
+              color: AppColors.coral,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const MemoryMasterScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MiniGameCard(
+              title: 'Pattern Power',
+              subtitle: 'What comes next?',
+              icon: Icons.pattern_rounded,
+              color: AppColors.grapePurple,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PatternPowerScreen(),
                   ),
                 );
               },
