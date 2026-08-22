@@ -7,6 +7,7 @@ import '../../features/home/home_screen.dart';
 import '../../features/mini_games/mini_games_screen.dart';
 import '../../features/parent_zone/parent_gate_screen.dart';
 import '../../features/parent_zone/parent_zone_screen.dart';
+import '../../features/player/hero_preset_selection_screen.dart';
 import '../../features/player/hero_selection_screen.dart';
 import '../../features/room/room_screen.dart';
 import '../../features/shop/shop_screen.dart';
@@ -29,6 +30,8 @@ class AppRouter {
         return _pageRoute(const WelcomeScreen(), settings);
       case RouteNames.heroSelection:
         return _pageRoute(const HeroSelectionScreen(), settings);
+      case RouteNames.heroPresetSelection:
+        return _pageRoute(const HeroPresetSelectionScreen(), settings);
       case RouteNames.home:
         return _pageRoute(const HomeScreen(), settings);
       case RouteNames.adventureMap:

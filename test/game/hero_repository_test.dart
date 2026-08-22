@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:super_kid_adventure/game/data/accessory_catalog.dart';
 import 'package:super_kid_adventure/game/data/hero_customization_catalog.dart';
 import 'package:super_kid_adventure/game/models/hero_profile.dart';
 import 'package:super_kid_adventure/game/repositories/hero_repository.dart';
@@ -12,27 +13,55 @@ void main() {
 
       final profile = repository.load();
 
+      expect(
+          profile.skinToneId, HeroCustomizationCatalog.skinToneOptions.first.id);
       expect(profile.hairOptionId, HeroCustomizationCatalog.hairOptions.first.id);
       expect(
           profile.outfitOptionId, HeroCustomizationCatalog.outfitOptions.first.id);
+      expect(profile.accessoryId, AccessoryCatalog.options.first.id);
     });
 
     test('save() then load() round-trips the chosen options', () async {
       final repository = HeroRepository(FakeLocalStorageService());
       final saved = HeroProfile(
+        skinToneId: HeroCustomizationCatalog.skinToneOptions[3].id,
         hairOptionId: HeroCustomizationCatalog.hairOptions[2].id,
         outfitOptionId: HeroCustomizationCatalog.outfitOptions[1].id,
         shoesOptionId: HeroCustomizationCatalog.shoesOptions[3].id,
         backpackOptionId: HeroCustomizationCatalog.backpackOptions[0].id,
+        accessoryId: AccessoryCatalog.options[2].id,
       );
 
       await repository.save(saved);
       final loaded = repository.load();
 
+      expect(loaded.skinToneId, saved.skinToneId);
       expect(loaded.hairOptionId, saved.hairOptionId);
       expect(loaded.outfitOptionId, saved.outfitOptionId);
       expect(loaded.shoesOptionId, saved.shoesOptionId);
       expect(loaded.backpackOptionId, saved.backpackOptionId);
+      expect(loaded.accessoryId, saved.accessoryId);
+    });
+
+    test('load() defaults skinToneId/accessoryId for a pre-redesign save',
+        () async {
+      // A save written before the Phase 2 redesign added these fields —
+      // must still load instead of resetting the whole hero.
+      final storage = FakeLocalStorageService();
+      await storage.setString('hero_profile_v1', '{'
+          '"hairOptionId":"berry",'
+          '"outfitOptionId":"sky",'
+          '"shoesOptionId":"ocean",'
+          '"backpackOptionId":"star"'
+          '}');
+      final repository = HeroRepository(storage);
+
+      final profile = repository.load();
+
+      expect(profile.hairOptionId, 'berry');
+      expect(
+          profile.skinToneId, HeroCustomizationCatalog.skinToneOptions.first.id);
+      expect(profile.accessoryId, AccessoryCatalog.options.first.id);
     });
 
     test('load() falls back to defaults on corrupted save data', () async {

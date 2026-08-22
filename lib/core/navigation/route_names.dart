@@ -6,6 +6,7 @@ class RouteNames {
   static const String splash = '/splash';
   static const String welcome = '/welcome';
   static const String heroSelection = '/hero-selection';
+  static const String heroPresetSelection = '/hero-preset-selection';
   static const String home = '/home';
   static const String adventureMap = '/adventure-map';
   static const String miniGames = '/mini-games';

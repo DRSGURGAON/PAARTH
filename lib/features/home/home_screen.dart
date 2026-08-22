@@ -3,19 +3,23 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/badge_catalog.dart';
 import '../../game/data/companion_catalog.dart';
 import '../../game/models/companion.dart';
 import '../../game/repositories/coin_repository.dart';
 import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/hero_repository.dart';
+import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
+import '../../game/repositories/quest_repository.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../player/hero_avatar_preview.dart';
 
 /// Landing spot after the hero is created: shows the hero, current
-/// stars and coins, and the next actions — Adventure Map, Mini-Games,
-/// and the badge Collection. Stateful so the currency badges refresh
-/// when the child comes back from earning more.
+/// stars, coins and badges, and the next actions — Adventure Map,
+/// Mini-Games, Collection, Companions, Room, and Customize. Stateful so
+/// the currency badges refresh when the child comes back from earning
+/// more.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -54,12 +58,25 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openCustomize() async {
+    await Navigator.of(context).pushNamed(RouteNames.heroSelection);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
     final profile = HeroRepository(storage).load();
     final stars = ProgressRepository(storage).stars;
     final coins = CoinRepository(storage).coins;
+    final badgeCount = BadgeCatalog.earnedBadgeIds(
+      BadgeStats(
+        completedQuestIds: QuestRepository(storage).completedQuestIds(),
+        miniGameStarIds: MiniGameRepository(storage).starEarnedGameIds(),
+        totalStars: stars,
+        totalCoins: coins,
+      ),
+    ).length;
     final selectedCompanionId = CompanionRepository(storage).selectedCompanionId;
     Companion? activeCompanion;
     for (final companion in CompanionCatalog.all) {
@@ -97,6 +114,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.monetization_on_rounded,
                         color: AppColors.coin,
                         value: coins,
+                      ),
+                      const SizedBox(width: 10),
+                      _CurrencyBadge(
+                        icon: Icons.emoji_events_rounded,
+                        color: AppColors.grapePurple,
+                        value: badgeCount,
                       ),
                     ],
                   ),
@@ -168,6 +191,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.chair_rounded,
                 backgroundColor: AppColors.skyBlue,
                 onPressed: _openRoom,
+              ),
+              const SizedBox(height: 12),
+              BigRoundedButton(
+                label: 'Customize',
+                icon: Icons.checkroom_rounded,
+                backgroundColor: AppColors.grapePurple,
+                onPressed: _openCustomize,
               ),
               const SizedBox(height: 16),
             ],

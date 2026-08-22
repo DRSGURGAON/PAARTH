@@ -335,6 +335,52 @@ V1 is content-complete across all 13 planned phases. What's genuinely
 left is what only a real toolchain can do: compiling it, running the
 45-file test suite, and building/signing an actual release artifact.
 
+**Phase 2 redesign** — after V1 shipped, Hero Selection / Home /
+Adventure Map were revisited against a more detailed brief for that
+area, adapting the existing architecture rather than rebuilding it so
+Phase 3–13's quests, shop, and companions keep working unchanged:
+- **First-run hero creation** is now a preset carousel
+  (`HeroPresetSelectionScreen`, reached from Welcome's first **PLAY**):
+  Previous/Next browse 8 original presets spanning every skin tone and
+  a mix of accessories, Select confirms one, Continue saves it. No text
+  entry anywhere. The existing swatch-by-swatch `HeroSelectionScreen`
+  keeps its role unchanged as the detailed re-customize screen
+  (reachable from the Room, and now also from Home's new **Customize**
+  button) — picking a preset and later fine-tuning it is the same
+  `HeroProfile` the whole way through, no separate preset model
+- `HeroProfile` gained `skinToneId` (5 tones) and `accessoryId` (4
+  accessories + "None"), both with backward-compatible JSON defaults so
+  a hero saved before this redesign still loads instead of resetting.
+  `HeroAvatarPreview` renders the chosen skin tone (previously a
+  hardcoded color) and an emoji accessory overlay
+- **Jungle Adventure** gained a sixth location, **Mountain** (locked,
+  real 14 ⭐ threshold) between Lion Cave and Jungle Temple; its quest
+  content isn't authored yet, so reaching it early shows a friendly
+  "more adventures coming soon" screen rather than an empty or fake
+  quest list. Monkey Camp now starts unlocked alongside Tree House
+  (both 0 ⭐); Waterfall/Lion Cave/Jungle Temple's thresholds were
+  rebalanced (6/10/16 ⭐) so the existing two-quests-per-location star
+  economy still covers every step
+- The Adventure Map now shows a real **completed** state (✓ and stars
+  earned, computed live from `QuestRepository` vs. each location's
+  quest list — never stored, same "derived, not saved" approach the
+  badge system uses) alongside locked/unlocked, a small portrait of the
+  child's own hero marking their furthest-unlocked location, and a
+  gentle shake (reusing `ShakeWidget`) when a locked node is tapped.
+  Every node now carries a semantic label describing its state, not
+  just a color
+- **Home** gained a Badges count (reusing `BadgeCatalog`/`BadgeStats`,
+  the same live computation the Collection screen already used) and a
+  direct **Customize** button, without removing the existing Mini-Games
+  or My Collection entry points that weren't mentioned in the new brief
+- Tests updated for the new unlock thresholds and 6-location map, plus
+  new coverage for the preset catalog/screen, skin tone and accessory
+  rendering, and the map's locked/unlocked/completed states and
+  navigation (`test/adventure_map_screen_test.dart`)
+- Same honest limit as every phase before it: no Flutter SDK has been
+  available here, so none of this has been compiled, analyzed, or run
+  — see Phase 13's note above, which still applies in full
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -368,21 +414,32 @@ iOS support is architected for but not built yet — see the brief).
    Adventure", then auto-advances to the Welcome screen after ~2s.
 2. Welcome screen shows the game title, tagline, and a big **PLAY**
    button.
-3. Tapping **PLAY** opens **Build Your Hero**: tap swatches in each of
-   the 4 rows (Hair/Outfit/Shoes/Backpack) and watch the avatar preview
-   above update live.
-4. Tapping **Start Adventure** goes to **Home**: your hero, a star
-   count, and an **Adventure Map** button.
-5. On the **Adventure Map**, tap **Tree House** → a list of 2 quests.
-   Locked locations still show a gentle "Earn N more ⭐" hint.
+3. Tapping **PLAY** opens **Choose Your Hero**: a carousel of preset
+   heroes (varied skin tones, hair, outfits, accessories — no typing, no
+   name asked for). **Previous**/**Next** browse, **Select** confirms
+   the one showing, **Continue** saves it and moves on.
+4. Continuing goes to **Home**: your hero, ⭐/🪙/🏅 counts, and buttons
+   for Adventure, Mini-Games, Collection, Companions, Room, and
+   **Customize** (the detailed swatch-by-swatch editor, also reachable
+   from the Room — pick skin tone, hair, outfit, shoes, backpack, and an
+   accessory individually).
+5. On the **Adventure Map**, both **Tree House** and **Monkey Camp**
+   start unlocked; tap Tree House → a list of 2 quests. Locked locations
+   show a lock icon, a gentle "Earn N more ⭐" hint on tap (with a small
+   shake), and never rely on color alone to say so.
 6. Play **Repair the Jungle Bridge**: story intro → 3 challenges with
    big emoji visuals and tap-to-answer buttons. A wrong answer shows
    encouragement ("Almost! Let's try again!") and lets you retry; each
    solved challenge awards a story item (Bridge Piece 1…3); finishing
    shows a celebration screen with **+2 ⭐**.
-7. Back on the map, your stars now count toward unlocks: after both
-   Tree House quests (4 ⭐), **Monkey Camp** (3 ⭐) unlocks. Completing
-   all 10 quests (20 ⭐) opens every location including the Temple.
+7. Back on the map, your stars now count toward unlocks: **Waterfall**
+   opens at 6 ⭐, **Lion Cave** at 10 ⭐, **Mountain** at 14 ⭐ (real and
+   locked, but its own quests aren't authored yet — opening it early
+   shows a friendly "more adventures coming soon" screen instead of a
+   fake quest list), and **Jungle Temple** at 16 ⭐. A completed
+   location shows a ✓ badge and its stars earned instead of a lock
+   hint. Your hero also appears as a small marker at your furthest
+   unlocked location.
 8. Replay a completed quest: it's marked "Completed! Play again for
    practice" and awards no extra stars.
 9. From **Home**, tap **Mini-Games** → **Math Dash**: the intro states

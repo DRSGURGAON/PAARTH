@@ -36,4 +36,14 @@ class HeroCustomizationCatalog {
     CustomizationOption(id: 'star', label: 'Star', color: Color(0xFFFFC93C)),
     CustomizationOption(id: 'cosmic', label: 'Cosmic', color: Color(0xFF9B6BFF)),
   ];
+
+  /// Five skin tones spanning light to deep — a real, non-token range
+  /// rather than a single default (Phase 2 redesign brief section 1).
+  static const List<CustomizationOption> skinToneOptions = [
+    CustomizationOption(id: 'light', label: 'Light', color: Color(0xFFF6D2B0)),
+    CustomizationOption(id: 'fair', label: 'Fair', color: Color(0xFFF2C299)),
+    CustomizationOption(id: 'tan', label: 'Tan', color: Color(0xFFD9A066)),
+    CustomizationOption(id: 'deep', label: 'Deep', color: Color(0xFFA9673A)),
+    CustomizationOption(id: 'deepest', label: 'Deepest', color: Color(0xFF6B4226)),
+  ];
 }

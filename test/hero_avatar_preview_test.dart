@@ -6,6 +6,39 @@ import 'package:super_kid_adventure/game/data/shop_catalog.dart';
 import 'package:super_kid_adventure/game/models/hero_profile.dart';
 
 void main() {
+  testWidgets('a hero profile with a chosen skin tone renders that '
+      "tone's real color, not a hardcoded default", (tester) async {
+    final deepestTone = HeroCustomizationCatalog.skinToneOptions.last;
+    final profile = HeroProfile.initial().copyWith(skinToneId: deepestTone.id);
+
+    await tester.pumpWidget(
+      MaterialApp(home: HeroAvatarPreview(profile: profile)),
+    );
+
+    final containerColors = tester
+        .widgetList<Container>(find.byType(Container))
+        .where((c) => c.decoration is BoxDecoration)
+        .map((c) => (c.decoration as BoxDecoration).color)
+        .toList();
+
+    expect(containerColors, contains(deepestTone.color));
+  });
+
+  testWidgets('an accessory renders its emoji, and "None" renders nothing',
+      (tester) async {
+    final withAccessory = HeroProfile.initial().copyWith(accessoryId: 'cape');
+    await tester.pumpWidget(
+      MaterialApp(home: HeroAvatarPreview(profile: withAccessory)),
+    );
+    expect(find.text('🧣'), findsOneWidget);
+
+    final withoutAccessory = HeroProfile.initial().copyWith(accessoryId: 'none');
+    await tester.pumpWidget(
+      MaterialApp(home: HeroAvatarPreview(profile: withoutAccessory)),
+    );
+    expect(find.text('🧣'), findsNothing);
+  });
+
   /// A regression check for the bug this screen used to have: resolving
   /// a profile's option id only against the free `HeroCustomizationCatalog`
   /// list meant an equipped *shop* item silently rendered as whatever the

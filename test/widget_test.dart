@@ -20,11 +20,14 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 3));
   }
 
-  /// PLAY → Start Adventure → Adventure Map (shared start of every flow).
+  /// PLAY → pick a preset hero → Continue → Adventure Map (shared start
+  /// of every flow).
   Future<void> reachAdventureMap(WidgetTester tester) async {
     await tester.tap(find.text('PLAY'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start Adventure'));
+    await tester.tap(find.text('Select'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Adventure Map'));
     await tester.pumpAndSettle();
@@ -47,25 +50,28 @@ void main() {
     await tester.tap(find.text('PLAY'));
     await tester.pumpAndSettle();
 
-    // Hero Selection screen.
-    expect(find.text('Build Your Hero'), findsOneWidget);
-    expect(find.text('Hair'), findsOneWidget);
-    expect(find.text('Outfit'), findsOneWidget);
-    expect(find.text('Shoes'), findsOneWidget);
-    expect(find.text('Backpack'), findsOneWidget);
-    await tester.tap(find.text('Start Adventure'));
+    // Hero Preset Selection screen: browse, select, continue. No text
+    // entry anywhere in this flow — no name is ever asked for.
+    expect(find.text('Choose Your Hero'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Select'));
+    await tester.pumpAndSettle();
+    expect(find.text('Selected!'), findsOneWidget);
+    await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    // Home screen — no stars or coins yet (both currency badges show 0).
+    // Home screen — no stars, coins, or badges yet (all three show 0).
     expect(find.text('Ready for adventure?'), findsOneWidget);
-    expect(find.text('0'), findsNWidgets(2));
+    expect(find.text('0'), findsNWidgets(3));
     await tester.tap(find.text('Adventure Map'));
     await tester.pumpAndSettle();
 
-    // Adventure Map: entry location unlocked, others locked.
+    // Adventure Map: both starter locations unlocked, later ones locked.
     expect(find.text('Jungle Adventure'), findsOneWidget);
     expect(find.text('Tree House'), findsOneWidget);
-    expect(find.text('3 ⭐ to unlock'), findsOneWidget);
+    expect(find.text('Monkey Camp'), findsOneWidget);
+    expect(find.text('6 ⭐ to unlock'), findsOneWidget);
 
     // Enter Tree House: its quest list appears.
     await tester.tap(find.text('Tree House'));
@@ -158,9 +164,9 @@ void main() {
     await skipSplash(tester);
     await reachAdventureMap(tester);
 
-    await tester.tap(find.text('Monkey Camp'));
+    await tester.tap(find.text('Waterfall'));
     await tester.pump();
 
-    expect(find.textContaining('Earn 3 more ⭐'), findsOneWidget);
+    expect(find.textContaining('Earn 6 more ⭐'), findsOneWidget);
   });
 }

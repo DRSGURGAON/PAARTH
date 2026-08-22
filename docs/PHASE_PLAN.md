@@ -18,9 +18,11 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 13** — Testing + Android release build
 
 V1 scope, as actually shipped: **Jungle Adventure only**, fully playable
-(5 locations, 10 quests, all 5 mini-games, rewards, companions, room
-customization, Parent Zone, save/reset, and the animation+sound polish
-of Phase 12). Worlds 2–5 (Space Mission, Dino Island, Magic Kingdom,
+(6 locations after the post-V1 Phase 2 redesign added Mountain — 10
+quests across the 5 locations that have quest content, Mountain's not
+authored yet; all 5 mini-games, rewards, companions, room customization,
+Parent Zone, save/reset, and the animation+sound polish of Phase 12).
+Worlds 2–5 (Space Mission, Dino Island, Magic Kingdom,
 Robot City) are designed in the brief but intentionally not built —
 `game/worlds/jungle_world.dart` establishes the pattern a `space_world.dart`
 etc. would follow later without rewriting existing code, but no Space

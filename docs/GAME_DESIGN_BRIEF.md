@@ -21,7 +21,8 @@ copyrighted third-party characters.
 ## Worlds (only Jungle Adventure + start of Space Mission ship in V1)
 
 1. **Jungle Adventure** — Tree House, Monkey Camp, Waterfall, Lion Cave,
-   Jungle Temple
+   Mountain, Jungle Temple (Mountain has no quest content yet — designed,
+   not built, same as the worlds below)
 2. **Space Mission** — Space Station, Moon Base, Alien Garden, Asteroid
    Field, Space Portal
 3. **Dino Island** *(designed, not built)* — Dino Camp, Fossil Valley,

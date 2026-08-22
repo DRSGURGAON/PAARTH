@@ -27,11 +27,20 @@ void main() {
       }
     });
 
-    test('every location has at least one quest', () {
+    test('every location has at least one quest, except Mountain', () {
+      // Mountain ships real and honestly-locked in the map (Phase 2
+      // redesign), but its quest content hasn't been authored yet —
+      // deliberate scope exclusion, not a content gap. See JungleWorld's
+      // doc comment and LocationQuestsScreen's "coming soon" state.
       for (final location in JungleWorld.locations) {
+        if (location.id == 'mountain') continue;
         expect(JungleQuests.forLocation(location.id), isNotEmpty,
             reason: '${location.name} has no quests');
       }
+    });
+
+    test('Mountain intentionally has no quests yet', () {
+      expect(JungleQuests.forLocation('mountain'), isEmpty);
     });
 
     test('every challenge is well-formed', () {

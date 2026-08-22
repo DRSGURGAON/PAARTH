@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/accessory_catalog.dart';
 import '../../game/data/hero_customization_catalog.dart';
 import '../../game/data/shop_catalog.dart';
+import '../../game/models/accessory_option.dart';
 import '../../game/models/customization_option.dart';
 import '../../game/models/hero_profile.dart';
 import '../../game/models/shop_item.dart';
@@ -13,9 +15,12 @@ import '../../game/repositories/shop_repository.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import 'hero_avatar_preview.dart';
 
-/// Lets the child build their hero from four swatch categories, then
-/// saves it and starts the adventure. No text entry, no personal
-/// information — every choice is a single tap on a big color circle.
+/// Lets the child fine-tune their hero across six categories (skin tone,
+/// hair, outfit, shoes, backpack, accessory), then saves it. No text
+/// entry, no personal information — every choice is a single tap on a
+/// big swatch. This is the detailed re-customize screen, reachable from
+/// the Room; first-run hero creation instead uses the separate
+/// HeroPresetSelectionScreen.
 class HeroSelectionScreen extends StatefulWidget {
   const HeroSelectionScreen({super.key});
 
@@ -73,17 +78,21 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
   }
 
   void _select({
+    String? skinToneId,
     String? hairOptionId,
     String? outfitOptionId,
     String? shoesOptionId,
     String? backpackOptionId,
+    String? accessoryId,
   }) {
     setState(() {
       _profile = _profile.copyWith(
+        skinToneId: skinToneId,
         hairOptionId: hairOptionId,
         outfitOptionId: outfitOptionId,
         shoesOptionId: shoesOptionId,
         backpackOptionId: backpackOptionId,
+        accessoryId: accessoryId,
       );
     });
   }
@@ -109,6 +118,12 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   _CategoryPicker(
+                    label: 'Skin Tone',
+                    options: HeroCustomizationCatalog.skinToneOptions,
+                    selectedId: _profile.skinToneId,
+                    onSelected: (id) => _select(skinToneId: id),
+                  ),
+                  _CategoryPicker(
                     label: 'Hair',
                     options: _hairOptions,
                     selectedId: _profile.hairOptionId,
@@ -131,6 +146,10 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
                     options: _backpackOptions,
                     selectedId: _profile.backpackOptionId,
                     onSelected: (id) => _select(backpackOptionId: id),
+                  ),
+                  _AccessoryPicker(
+                    selectedId: _profile.accessoryId,
+                    onSelected: (id) => _select(accessoryId: id),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -243,6 +262,95 @@ class _Swatch extends StatelessWidget {
                   : null,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Mirrors [_CategoryPicker] for the one non-color category: accessories
+/// are emoji badges (including a "None" choice), not color swatches.
+class _AccessoryPicker extends StatelessWidget {
+  const _AccessoryPicker({required this.selectedId, required this.onSelected});
+
+  final String selectedId;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Accessory', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 76,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: AccessoryCatalog.options.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final option = AccessoryCatalog.options[index];
+              final isSelected = option.id == selectedId;
+              return _AccessorySwatch(
+                key: ValueKey('accessory_${option.id}'),
+                option: option,
+                isSelected: isSelected,
+                onTap: () => onSelected(option.id),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _AccessorySwatch extends StatelessWidget {
+  const _AccessorySwatch({
+    required this.option,
+    required this.isSelected,
+    required this.onTap,
+    super.key,
+  });
+
+  final AccessoryOption option;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: option.label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isSelected ? AppColors.inkNavy : Colors.grey.shade300,
+              width: 3,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.inkNavy.withOpacity(0.25),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: option.emoji == null
+              ? Icon(Icons.block_rounded, color: Colors.grey.shade400)
+              : Text(option.emoji!, style: const TextStyle(fontSize: 24)),
         ),
       ),
     );

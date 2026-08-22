@@ -9,15 +9,21 @@ void main() {
       expect(treeHouse.isUnlockedFor(0), isTrue);
     });
 
-    test('later locations stay locked until enough stars are earned', () {
+    test('Monkey Camp is unlocked from the start alongside Tree House', () {
       final monkeyCamp = JungleWorld.locations[1];
 
-      expect(monkeyCamp.isUnlockedFor(2), isFalse);
-      expect(monkeyCamp.isUnlockedFor(3), isTrue);
-      expect(monkeyCamp.isUnlockedFor(10), isTrue);
+      expect(monkeyCamp.isUnlockedFor(0), isTrue);
     });
 
-    test('Jungle world has all 5 locations from the design brief', () {
+    test('later locations stay locked until enough stars are earned', () {
+      final waterfall = JungleWorld.locations[2];
+
+      expect(waterfall.isUnlockedFor(5), isFalse);
+      expect(waterfall.isUnlockedFor(6), isTrue);
+      expect(waterfall.isUnlockedFor(10), isTrue);
+    });
+
+    test('Jungle world has all 6 locations, Mountain included', () {
       final names = JungleWorld.locations.map((l) => l.name).toList();
 
       expect(names, [
@@ -25,6 +31,7 @@ void main() {
         'Monkey Camp',
         'Waterfall',
         'Lion Cave',
+        'Mountain',
         'Jungle Temple',
       ]);
     });

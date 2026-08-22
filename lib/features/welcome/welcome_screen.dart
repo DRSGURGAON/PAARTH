@@ -52,7 +52,9 @@ class WelcomeScreen extends StatelessWidget {
                     : Icons.play_arrow_rounded,
                 backgroundColor: AppColors.coral,
                 onPressed: () => Navigator.of(context).pushReplacementNamed(
-                  hasSavedProfile ? RouteNames.home : RouteNames.heroSelection,
+                  hasSavedProfile
+                      ? RouteNames.home
+                      : RouteNames.heroPresetSelection,
                 ),
               ),
               const SizedBox(height: 24),

@@ -39,19 +39,51 @@ class _LocationQuestsScreenState extends State<LocationQuestsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.location.name)),
       body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.all(20),
-          itemCount: quests.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final quest = quests[index];
-            final isCompleted = completedIds.contains(quest.id);
-            return _QuestCard(
-              quest: quest,
-              isCompleted: isCompleted,
-              onTap: () => _openQuest(quest),
-            );
-          },
+        child: quests.isEmpty
+            ? _ComingSoon(location: widget.location)
+            : ListView.separated(
+                padding: const EdgeInsets.all(20),
+                itemCount: quests.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  final quest = quests[index];
+                  final isCompleted = completedIds.contains(quest.id);
+                  return _QuestCard(
+                    quest: quest,
+                    isCompleted: isCompleted,
+                    onTap: () => _openQuest(quest),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+/// Shown for a location with no quest content yet (V1: Mountain). Honest
+/// rather than a fake/empty-looking list — makes clear more is coming
+/// without any button that would pretend to do something real.
+class _ComingSoon extends StatelessWidget {
+  const _ComingSoon({required this.location});
+
+  final WorldLocation location;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(location.icon, size: 72, color: AppColors.inkNavy.withOpacity(0.35)),
+            const SizedBox(height: 16),
+            Text(
+              'More adventures are coming to ${location.name} soon!',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ],
         ),
       ),
     );

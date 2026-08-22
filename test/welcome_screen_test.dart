@@ -21,7 +21,7 @@ void main() {
     );
   }
 
-  testWidgets('a first-time player sees PLAY and goes to Hero Selection',
+  testWidgets('a first-time player sees PLAY and goes to hero preset selection',
       (tester) async {
     await tester.pumpWidget(buildHarness(FakeLocalStorageService()));
 
@@ -31,7 +31,7 @@ void main() {
     await tester.tap(find.text('PLAY'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Build Your Hero'), findsOneWidget);
+    expect(find.text('Choose Your Hero'), findsOneWidget);
   });
 
   testWidgets(
@@ -49,7 +49,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ready for adventure?'), findsOneWidget);
-    // Hero Selection is skipped entirely for a returning player.
-    expect(find.text('Build Your Hero'), findsNothing);
+    // Hero creation is skipped entirely for a returning player.
+    expect(find.text('Choose Your Hero'), findsNothing);
   });
 }

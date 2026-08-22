@@ -33,6 +33,28 @@ void main() {
     expect(find.text('Visit Shop'), findsOneWidget);
   });
 
+  testWidgets('Customize opens the detailed hero editor', (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(
+      AppScope(
+        storage: storage,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          onGenerateRoute: AppRouter.generateRoute,
+          home: const HomeScreen(),
+        ),
+      ),
+    );
+
+    await tester.ensureVisible(find.text('Customize'));
+    await tester.tap(find.text('Customize'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Skin Tone'), findsOneWidget);
+    expect(find.text('Accessory'), findsOneWidget);
+  });
+
   testWidgets('the parent-zone entry opens the gate, not the dashboard '
       'directly', (tester) async {
     final storage = FakeLocalStorageService();
