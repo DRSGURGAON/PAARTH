@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/core/theme/app_theme.dart';
 import 'package:super_kid_adventure/features/mini_games/word_builder_screen.dart';
+import 'package:super_kid_adventure/game/data/companion_catalog.dart';
+import 'package:super_kid_adventure/game/repositories/companion_repository.dart';
 import 'package:super_kid_adventure/game/repositories/progress_repository.dart';
 
 import 'support/fake_local_storage_service.dart';
@@ -10,8 +12,11 @@ import 'support/fake_local_storage_service.dart';
 void main() {
   late FakeLocalStorageService storage;
 
-  Widget buildHarness() {
+  Future<Widget> buildHarness({bool puppyEquipped = false}) async {
     storage = FakeLocalStorageService();
+    if (puppyEquipped) {
+      await CompanionRepository(storage).selectCompanion(CompanionIds.puppy);
+    }
     return AppScope(
       storage: storage,
       child: MaterialApp(
@@ -38,7 +43,7 @@ void main() {
   }
 
   testWidgets('a perfect game scores 6/6 and earns a star', (tester) async {
-    await tester.pumpWidget(buildHarness());
+    await tester.pumpWidget(await buildHarness());
 
     expect(find.textContaining('earn a ⭐'), findsOneWidget);
     await tester.tap(find.text("Let's Go!"));
@@ -63,7 +68,7 @@ void main() {
 
   testWidgets('tapping a placed letter returns it to the pool',
       (tester) async {
-    await tester.pumpWidget(buildHarness());
+    await tester.pumpWidget(await buildHarness());
     await tester.tap(find.text("Let's Go!"));
     await tester.pump();
 
@@ -85,7 +90,7 @@ void main() {
 
   testWidgets('an incorrect order gives the letters back for a retry',
       (tester) async {
-    await tester.pumpWidget(buildHarness());
+    await tester.pumpWidget(await buildHarness());
     await tester.tap(find.text("Let's Go!"));
     await tester.pump();
 
@@ -111,5 +116,48 @@ void main() {
     await spellCurrentWord(tester);
     expect(find.text('Word 2 of ${WordBuilderScreen.roundLength}'),
         findsOneWidget);
+  });
+
+  testWidgets("Puppy places the word's first letter automatically",
+      (tester) async {
+    await tester.pumpWidget(await buildHarness(puppyEquipped: true));
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pump();
+
+    final word = stateOf(tester).currentPuzzle.word;
+    expect(stateOf(tester).puppyPlacedLetter, word[0]);
+    expect(find.byKey(const ValueKey('puppy_hint_label')), findsOneWidget);
+    // Exactly one tile (the placed one) is missing from the pool.
+    expect(stateOf(tester).pool.length, word.length - 1);
+
+    // Finish spelling the rest — the round should still complete normally.
+    for (final letter in word.substring(1).split('')) {
+      final tile = stateOf(tester).pool.firstWhere((t) => t.letter == letter);
+      await tester.tap(find.byKey(ValueKey('pool_${tile.id}')));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Word 2 of ${WordBuilderScreen.roundLength}'),
+        findsOneWidget);
+    // Puppy places the new round's first letter again too.
+    expect(
+      stateOf(tester).puppyPlacedLetter,
+      stateOf(tester).currentPuzzle.word[0],
+    );
+  });
+
+  testWidgets('without Puppy equipped, no letter is pre-placed',
+      (tester) async {
+    await tester.pumpWidget(await buildHarness());
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pump();
+
+    expect(stateOf(tester).puppyPlacedLetter, isNull);
+    expect(find.byKey(const ValueKey('puppy_hint_label')), findsNothing);
+    expect(
+      stateOf(tester).pool.length,
+      stateOf(tester).currentPuzzle.word.length,
+    );
   });
 }

@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/companion_catalog.dart';
 import '../../game/models/quest.dart';
 import '../../game/models/word_puzzle.dart';
 import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
@@ -52,6 +54,7 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late bool _puppyActive;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
@@ -80,6 +83,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _puppyActive = CompanionRepository(storage).selectedCompanionId ==
+        CompanionIds.puppy;
     _loaded = true;
   }
 
@@ -100,7 +105,21 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
     _pool = [for (var i = 0; i < letters.length; i++) _LetterTile(i, letters[i])];
     _placed = List<_LetterTile?>.filled(_puzzle.word.length, null);
     _firstAttempt = true;
+
+    // Puppy's hint: sniff out and place the word's first letter so the
+    // child only has to finish the rest.
+    if (_puppyActive) {
+      final firstLetter = _puzzle.word[0];
+      final tile = _pool.firstWhere((t) => t.letter == firstLetter);
+      _placed[0] = tile;
+      _pool = _pool.where((t) => t.id != tile.id).toList();
+    }
   }
+
+  /// The letter Puppy already placed in the first slot, or null when
+  /// Puppy isn't equipped.
+  @visibleForTesting
+  String? get puppyPlacedLetter => _placed.isNotEmpty ? _placed[0]?.letter : null;
 
   void _tapPoolTile(_LetterTile tile) {
     final emptySlot = _placed.indexOf(null);
@@ -202,6 +221,18 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 56),
         ),
+        if (_puppyActive) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Puppy sniffed out the first letter! 🐶',
+            key: const ValueKey('puppy_hint_label'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppColors.leafGreen),
+          ),
+        ],
         const SizedBox(height: 24),
         Wrap(
           alignment: WrapAlignment.center,

@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/companion_catalog.dart';
 import '../../game/models/quest.dart';
 import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
@@ -41,6 +43,7 @@ class MathDashScreenState extends State<MathDashScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late bool _robotActive;
   bool _loaded = false;
 
   _DashPhase _phase = _DashPhase.intro;
@@ -50,9 +53,19 @@ class MathDashScreenState extends State<MathDashScreen> {
   bool _firstAttempt = true;
   bool _starEarned = false;
   String? _feedback;
+  bool _hintUsed = false;
+  final Set<int> _eliminatedOptions = {};
 
   @visibleForTesting
   ChoiceChallenge get currentChallenge => _challenge;
+
+  /// Whether Robot (the Math Dash companion) is equipped, i.e. the hint
+  /// button should be offered at all this round.
+  @visibleForTesting
+  bool get hintAvailable => _robotActive;
+
+  @visibleForTesting
+  Set<int> get eliminatedOptions => _eliminatedOptions;
 
   @override
   void didChangeDependencies() {
@@ -64,6 +77,8 @@ class MathDashScreenState extends State<MathDashScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _robotActive =
+        CompanionRepository(storage).selectedCompanionId == CompanionIds.robot;
     _loaded = true;
   }
 
@@ -82,6 +97,25 @@ class MathDashScreenState extends State<MathDashScreen> {
     _challenge =
         _generator.next(_tracker.levelFor(ChallengeCategory.math));
     _firstAttempt = true;
+    _hintUsed = false;
+    _eliminatedOptions.clear();
+  }
+
+  /// Robot's hint: crosses out the first wrong-and-not-yet-eliminated
+  /// option, once per question. Never touches the correct index, so the
+  /// child still has to pick it themselves.
+  void _useHint() {
+    if (_hintUsed) return;
+    for (var i = 0; i < _challenge.options.length; i++) {
+      if (i == _challenge.correctIndex || _eliminatedOptions.contains(i)) {
+        continue;
+      }
+      setState(() {
+        _eliminatedOptions.add(i);
+        _hintUsed = true;
+      });
+      return;
+    }
   }
 
   Future<void> _submit(int optionIndex) async {
@@ -180,16 +214,37 @@ class MathDashScreenState extends State<MathDashScreen> {
                       ?.copyWith(color: AppColors.gentleWarning),
                 ),
         ),
+        if (_robotActive && !_hintUsed) ...[
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const ValueKey('robot_hint_button'),
+              onPressed: _useHint,
+              icon: const Icon(Icons.smart_toy_rounded, color: AppColors.skyBlue),
+              label: const Text('Robot Hint'),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
         const Spacer(),
         for (var i = 0; i < _challenge.options.length; i++) ...[
           FilledButton(
             key: ValueKey('option_$i'),
-            onPressed: () => _submit(i),
+            onPressed:
+                _eliminatedOptions.contains(i) ? null : () => _submit(i),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.inkNavy,
+              backgroundColor:
+                  _eliminatedOptions.contains(i) ? Colors.grey.shade300 : Colors.white,
+              foregroundColor: _eliminatedOptions.contains(i)
+                  ? Colors.grey.shade500
+                  : AppColors.inkNavy,
             ),
-            child: Text(_challenge.options[i]),
+            child: Text(
+              _challenge.options[i],
+              style: _eliminatedOptions.contains(i)
+                  ? const TextStyle(decoration: TextDecoration.lineThrough)
+                  : null,
+            ),
           ),
           const SizedBox(height: 12),
         ],

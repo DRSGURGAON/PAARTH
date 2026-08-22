@@ -10,7 +10,7 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 5** — Memory Master + Pattern Power mini-games
 - [x] **Phase 6** — Word Builder + Find & Discover mini-games
 - [x] **Phase 7** — Rewards (stars, coins, badges)
-- [ ] **Phase 8** — Companions
+- [x] **Phase 8** — Companions
 - [ ] **Phase 9** — Player room + character customization
 - [ ] **Phase 10** — Parent Zone
 - [ ] **Phase 11** — Save system + offline persistence

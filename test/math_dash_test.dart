@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/core/theme/app_theme.dart';
 import 'package:super_kid_adventure/features/mini_games/math_dash_screen.dart';
+import 'package:super_kid_adventure/game/data/companion_catalog.dart';
+import 'package:super_kid_adventure/game/repositories/companion_repository.dart';
 import 'package:super_kid_adventure/game/repositories/progress_repository.dart';
 
 import 'support/fake_local_storage_service.dart';
@@ -10,8 +12,11 @@ import 'support/fake_local_storage_service.dart';
 void main() {
   late FakeLocalStorageService storage;
 
-  Widget buildHarness() {
+  Future<Widget> buildHarness({bool robotEquipped = false}) async {
     storage = FakeLocalStorageService();
+    if (robotEquipped) {
+      await CompanionRepository(storage).selectCompanion(CompanionIds.robot);
+    }
     return AppScope(
       storage: storage,
       child: MaterialApp(
@@ -41,7 +46,7 @@ void main() {
   }
 
   testWidgets('a perfect round scores 8/8 and earns a star', (tester) async {
-    await tester.pumpWidget(buildHarness());
+    await tester.pumpWidget(await buildHarness());
 
     // Intro states the predictable reward, then start.
     expect(find.textContaining('earn a ⭐'), findsOneWidget);
@@ -67,7 +72,7 @@ void main() {
 
   testWidgets('wrong first tries cost score; below threshold earns no star',
       (tester) async {
-    await tester.pumpWidget(buildHarness());
+    await tester.pumpWidget(await buildHarness());
     await tester.tap(find.text("Let's Go!"));
     await tester.pumpAndSettle();
 
@@ -92,7 +97,7 @@ void main() {
   });
 
   testWidgets('Play Again starts a fresh round', (tester) async {
-    await tester.pumpWidget(buildHarness());
+    await tester.pumpWidget(await buildHarness());
     await tester.tap(find.text("Let's Go!"));
     await tester.pumpAndSettle();
 
@@ -107,5 +112,42 @@ void main() {
       find.text('Question 1 of ${MathDashScreen.roundLength}'),
       findsOneWidget,
     );
+  });
+
+  testWidgets("Robot's hint crosses out one wrong option, once per question",
+      (tester) async {
+    await tester.pumpWidget(await buildHarness(robotEquipped: true));
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('robot_hint_button')), findsOneWidget);
+    expect(stateOf(tester).eliminatedOptions, isEmpty);
+
+    await tester.tap(find.byKey(const ValueKey('robot_hint_button')));
+    await tester.pumpAndSettle();
+
+    // Exactly one wrong option eliminated; the correct one is untouched.
+    final correctIndex = stateOf(tester).currentChallenge.correctIndex;
+    expect(stateOf(tester).eliminatedOptions.length, 1);
+    expect(stateOf(tester).eliminatedOptions.contains(correctIndex), isFalse);
+    // Hint button disappears once used for this question.
+    expect(find.byKey(const ValueKey('robot_hint_button')), findsNothing);
+
+    // The eliminated option's button is disabled but the round is still
+    // winnable via the correct answer.
+    await answerCorrectly(tester);
+    expect(find.text('Question 2 of ${MathDashScreen.roundLength}'),
+        findsOneWidget);
+    // A fresh hint is offered again on the new question.
+    expect(find.byKey(const ValueKey('robot_hint_button')), findsOneWidget);
+  });
+
+  testWidgets('without Robot equipped, no hint button is offered',
+      (tester) async {
+    await tester.pumpWidget(await buildHarness());
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('robot_hint_button')), findsNothing);
   });
 }

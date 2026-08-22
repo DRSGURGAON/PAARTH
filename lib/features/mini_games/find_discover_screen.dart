@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/companion_catalog.dart';
 import '../../game/models/find_scene.dart';
 import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/find_scene_generator.dart';
@@ -45,6 +47,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late bool _monkeyActive;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
@@ -56,9 +59,15 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
   int _roundNumber = 0;
   int _cleanRounds = 0;
   bool _starEarned = false;
+  int _hintedIndex = -1;
 
   @visibleForTesting
   FindScene get currentScene => _scene;
+
+  /// The index Monkey (the Find & Discover companion) is pointing at
+  /// this scene, or -1 when Monkey isn't equipped.
+  @visibleForTesting
+  int get hintedIndex => _hintedIndex;
 
   @override
   void didChangeDependencies() {
@@ -69,6 +78,8 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _monkeyActive = CompanionRepository(storage).selectedCompanionId ==
+        CompanionIds.monkey;
     _loaded = true;
   }
 
@@ -89,6 +100,9 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
     _foundCount = 0;
     _mistakeMade = false;
     _shaking.clear();
+    _hintedIndex = _monkeyActive
+        ? _scene.items.indexWhere((item) => item.isTarget)
+        : -1;
   }
 
   Future<void> _tapItem(int index) async {
@@ -186,6 +200,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
               final item = _scene.items[index];
               final isFound = _found[index];
               final isShaking = _shaking.contains(index);
+              final isHinted = !isFound && index == _hintedIndex;
 
               return GestureDetector(
                 key: ValueKey('find_item_$index'),
@@ -199,12 +214,31 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
                             ? AppColors.leafGreen.withOpacity(0.25)
                             : Colors.white,
                     borderRadius: BorderRadius.circular(16),
+                    border: isHinted
+                        ? Border.all(color: AppColors.leafGreen, width: 3)
+                        : null,
                   ),
                   alignment: Alignment.center,
-                  child: isFound && item.isTarget
-                      ? const Icon(Icons.check_circle_rounded,
-                          color: AppColors.leafGreen, size: 28)
-                      : Text(item.emoji, style: const TextStyle(fontSize: 28)),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      isFound && item.isTarget
+                          ? const Icon(Icons.check_circle_rounded,
+                              color: AppColors.leafGreen, size: 28)
+                          : Text(item.emoji,
+                              style: const TextStyle(fontSize: 28)),
+                      if (isHinted)
+                        const Positioned(
+                          top: -6,
+                          right: -6,
+                          child: Icon(
+                            Icons.emoji_nature_rounded,
+                            color: AppColors.leafGreen,
+                            size: 16,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               );
             },

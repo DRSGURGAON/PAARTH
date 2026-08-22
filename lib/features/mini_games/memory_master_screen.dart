@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/companion_catalog.dart';
 import '../../game/models/memory_round.dart';
 import '../../game/models/quest.dart';
 import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
@@ -40,10 +42,12 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late bool _pandaActive;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
   late MemoryRound _round;
+  late Duration _studyDuration;
   int _roundNumber = 0;
   int _score = 0;
   bool _firstAttempt = true;
@@ -52,6 +56,11 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
 
   @visibleForTesting
   MemoryRound get currentRound => _round;
+
+  /// The study time actually used this round — 1.5x the round's base
+  /// duration when Panda (the Memory Master companion) is equipped.
+  @visibleForTesting
+  Duration get currentStudyDuration => _studyDuration;
 
   @override
   void didChangeDependencies() {
@@ -63,6 +72,8 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _pandaActive =
+        CompanionRepository(storage).selectedCompanionId == CompanionIds.panda;
     _loaded = true;
   }
 
@@ -80,7 +91,12 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
     _round = _generator.next(_tracker.levelFor(ChallengeCategory.memory));
     _firstAttempt = true;
     _phase = _RoundPhase.studying;
-    Future.delayed(_round.studyDuration, () {
+    _studyDuration = _pandaActive
+        ? Duration(
+            microseconds: (_round.studyDuration.inMicroseconds * 3) ~/ 2,
+          )
+        : _round.studyDuration;
+    Future.delayed(_studyDuration, () {
       if (!mounted || _phase != _RoundPhase.studying) return;
       setState(() => _phase = _RoundPhase.answering);
     });
@@ -162,6 +178,15 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
           textAlign: TextAlign.center,
           style: textTheme.headlineMedium,
         ),
+        if (_pandaActive) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Panda is giving you extra time! 🐼',
+            key: const ValueKey('panda_hint_label'),
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium?.copyWith(color: AppColors.coral),
+          ),
+        ],
         const SizedBox(height: 24),
         Wrap(
           alignment: WrapAlignment.center,

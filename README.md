@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 7 of 13 — Rewards system (stars, coins, badges)
+## Status: Phase 8 of 13 — Companions
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -123,9 +123,38 @@ Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
   Collection screen's earned/locked split actually matches seeded
   progress
 
-Not built yet: companions, player room, Parent Zone, coin-spending UI
-(coins accumulate now; Phase 9 builds what they buy). Those land in
-Phases 8–13.
+**Phase 8** —
+- 5 companions (Robot, Fox, Panda, Monkey, Puppy — brief section 10),
+  each paired one-to-one with a mini-game. A companion unlocks by
+  earning a star in its paired mini-game — proof the child can already
+  do it without help — and unlocking is recomputed live from real
+  mini-game progress, never stored, same shape as Phase 7's badges
+- `CompanionRepository` stores only the single equipped choice; at most
+  one companion is active at a time, free to switch
+- Each companion gives real, gameplay-affecting help once equipped —
+  no cosmetic-only "helpers":
+  - Robot / Fox: crosses out one wrong answer (once per question) in
+    Math Dash / Pattern Power
+  - Panda: 1.5x study time in Memory Master
+  - Monkey: points at one real hidden target in every Find & Discover
+    scene (the child still has to tap it)
+  - Puppy: places Word Builder's first letter automatically
+- "My Companions" screen (Home → My Companions): a badge-style grid,
+  locked companions greyed with the mini-game that unlocks them,
+  unlocked ones tappable to equip; the active companion also shows as
+  a small badge on the Home hero avatar
+- No coins were spent here — companions unlock through mini-game
+  mastery, not purchase; the coin-spending shop is still Phase 9's
+- Tests: catalog unlock-condition correctness (including "every
+  companion" and "only its own mini-game"), repository persistence,
+  My Companions screen's locked/unlocked/equip behavior, and each
+  companion's actual in-game effect (hint elimination never touches
+  the correct answer, Panda's exact 1.5x timing, Monkey's hint always
+  points at a real target, Puppy's placed letter always matches)
+
+Not built yet: player room, Parent Zone, coin-spending UI (coins
+accumulate now; Phase 9 builds what they buy). Those land in
+Phases 9–13.
 
 ## First-time setup
 
@@ -201,8 +230,23 @@ iOS support is architected for but not built yet — see the brief).
     the "N of 10 badges earned" count at the top updates.
 16. Close and reopen the app: hero, stars, coins, completed quests,
     mini-game stars, and difficulty levels all persist.
-17. `flutter test` passes (all widget + unit tests).
-18. `flutter analyze` reports no errors.
+17. On Home, tap **My Companions**: 5 companions, all locked at first.
+    Earn a star in any mini-game and return here — that companion is
+    now shown in color and tappable; tap it to equip.
+18. With Robot equipped, play Math Dash: a "Robot Hint" button appears
+    each question and crosses out one wrong answer (never the right
+    one) when tapped, once per question. Fox does the same in Pattern
+    Power.
+19. With Panda equipped, Memory Master's study phase visibly lasts
+    longer and says so ("Panda is giving you extra time!").
+20. With Monkey equipped, every Find & Discover scene has one item
+    outlined — a real target, though you still have to tap it yourself.
+21. With Puppy equipped, Word Builder always starts with the first
+    letter already placed ("Puppy sniffed out the first letter!").
+22. Only one companion can be equipped at a time; the active one also
+    shows as a small badge on the Home hero avatar.
+23. `flutter test` passes (all widget + unit tests).
+24. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -226,17 +270,17 @@ lib/
     quests/                  # quest list / intro / play / celebration
     mini_games/              # hub + all 5 mini-games
     collection/               # badge grid screen
+    companions/                 # "My Companions" selection screen
     room/                    # (Phase 9)
     parent_zone/             # (Phase 10)
   game/
-    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, ...
-    data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog
+    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, Companion, ...
+    data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog, CompanionCatalog
     repositories/            # HeroRepository, ProgressRepository, CoinRepository,
-                              # QuestRepository, MiniGameRepository
+                              # QuestRepository, MiniGameRepository, CompanionRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
     systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators
     quests/                  # JungleQuests content (10 quests, data only)
-    companions/                 # (Phase 8)
   shared/
     widgets/                 # BigRoundedButton, PlaceholderScreen, ...
 test/

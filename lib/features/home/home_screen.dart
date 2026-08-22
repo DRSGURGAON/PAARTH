@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/companion_catalog.dart';
+import '../../game/models/companion.dart';
 import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/hero_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../shared/widgets/big_rounded_button.dart';
@@ -36,12 +39,25 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openCompanions() async {
+    await Navigator.of(context).pushNamed(RouteNames.companions);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
     final profile = HeroRepository(storage).load();
     final stars = ProgressRepository(storage).stars;
     final coins = CoinRepository(storage).coins;
+    final selectedCompanionId = CompanionRepository(storage).selectedCompanionId;
+    Companion? activeCompanion;
+    for (final companion in CompanionCatalog.all) {
+      if (companion.id == selectedCompanionId) {
+        activeCompanion = companion;
+        break;
+      }
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -66,7 +82,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const Spacer(),
-              HeroAvatarPreview(profile: profile, size: 200),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  HeroAvatarPreview(profile: profile, size: 200),
+                  if (activeCompanion != null)
+                    Positioned(
+                      bottom: 0,
+                      right: -8,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: activeCompanion.color,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        child: Icon(
+                          activeCompanion.icon,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 16),
               Text(
                 'Ready for adventure?',
@@ -93,6 +133,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.emoji_events_rounded,
                 backgroundColor: AppColors.coral,
                 onPressed: _openCollection,
+              ),
+              const SizedBox(height: 12),
+              BigRoundedButton(
+                label: 'My Companions',
+                icon: Icons.pets_rounded,
+                backgroundColor: AppColors.leafGreen,
+                onPressed: _openCompanions,
               ),
               const SizedBox(height: 16),
             ],

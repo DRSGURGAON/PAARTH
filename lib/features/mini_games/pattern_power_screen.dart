@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/data/companion_catalog.dart';
 import '../../game/models/quest.dart';
 import '../../game/repositories/coin_repository.dart';
+import '../../game/repositories/companion_repository.dart';
 import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
@@ -40,6 +42,7 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late bool _foxActive;
   bool _loaded = false;
 
   _RoundPhase _phase = _RoundPhase.intro;
@@ -49,9 +52,17 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
   bool _firstAttempt = true;
   bool _starEarned = false;
   String? _feedback;
+  bool _hintUsed = false;
+  final Set<int> _eliminatedOptions = {};
 
   @visibleForTesting
   ChoiceChallenge get currentChallenge => _challenge;
+
+  @visibleForTesting
+  bool get hintAvailable => _foxActive;
+
+  @visibleForTesting
+  Set<int> get eliminatedOptions => _eliminatedOptions;
 
   @override
   void didChangeDependencies() {
@@ -63,6 +74,8 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _foxActive =
+        CompanionRepository(storage).selectedCompanionId == CompanionIds.fox;
     _loaded = true;
   }
 
@@ -80,6 +93,24 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
   void _nextQuestion() {
     _challenge = _generator.next(_tracker.levelFor(ChallengeCategory.logic));
     _firstAttempt = true;
+    _hintUsed = false;
+    _eliminatedOptions.clear();
+  }
+
+  /// Fox's hint: crosses out the first wrong-and-not-yet-eliminated
+  /// option, once per question. Never touches the correct index.
+  void _useHint() {
+    if (_hintUsed) return;
+    for (var i = 0; i < _challenge.options.length; i++) {
+      if (i == _challenge.correctIndex || _eliminatedOptions.contains(i)) {
+        continue;
+      }
+      setState(() {
+        _eliminatedOptions.add(i);
+        _hintUsed = true;
+      });
+      return;
+    }
   }
 
   Future<void> _submit(int optionIndex) async {
@@ -176,17 +207,38 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
                       ?.copyWith(color: AppColors.gentleWarning),
                 ),
         ),
+        if (_foxActive && !_hintUsed) ...[
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const ValueKey('fox_hint_button'),
+              onPressed: _useHint,
+              icon: const Icon(Icons.pets_rounded, color: AppColors.grapePurple),
+              label: const Text('Fox Hint'),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
         const Spacer(),
         for (var i = 0; i < _challenge.options.length; i++) ...[
           FilledButton(
             key: ValueKey('option_$i'),
-            onPressed: () => _submit(i),
+            onPressed:
+                _eliminatedOptions.contains(i) ? null : () => _submit(i),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.inkNavy,
+              backgroundColor:
+                  _eliminatedOptions.contains(i) ? Colors.grey.shade300 : Colors.white,
+              foregroundColor: _eliminatedOptions.contains(i)
+                  ? Colors.grey.shade500
+                  : AppColors.inkNavy,
               textStyle: const TextStyle(fontSize: 28),
             ),
-            child: Text(_challenge.options[i]),
+            child: Text(
+              _challenge.options[i],
+              style: _eliminatedOptions.contains(i)
+                  ? const TextStyle(decoration: TextDecoration.lineThrough)
+                  : null,
+            ),
           ),
           const SizedBox(height: 12),
         ],
