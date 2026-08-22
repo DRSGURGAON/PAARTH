@@ -8,4 +8,5 @@ class RouteNames {
   static const String heroSelection = '/hero-selection';
   static const String home = '/home';
   static const String adventureMap = '/adventure-map';
+  static const String miniGames = '/mini-games';
 }

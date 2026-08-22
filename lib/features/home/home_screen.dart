@@ -25,6 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openMiniGames() async {
+    await Navigator.of(context).pushNamed(RouteNames.miniGames);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
@@ -55,6 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.map_rounded,
                 backgroundColor: AppColors.skyBlue,
                 onPressed: _openAdventureMap,
+              ),
+              const SizedBox(height: 12),
+              BigRoundedButton(
+                label: 'Mini-Games',
+                icon: Icons.videogame_asset_rounded,
+                backgroundColor: AppColors.grapePurple,
+                onPressed: _openMiniGames,
               ),
               const SizedBox(height: 16),
             ],

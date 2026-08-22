@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 3 of 13 — Quest engine
+## Status: Phase 4 of 13 — Math Dash mini-game
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -41,8 +41,26 @@ Jungle Adventure map with star-gated locked/unlocked locations.
   Dash / Memory Master / Word Builder mini-games (Phases 4–6) plug into
   this same quest flow
 
-Not built yet: dedicated mini-games, coins/badges, companions, player
-room, Parent Zone. Those land in Phases 4–13, one phase at a time.
+**Phase 4** —
+- `DifficultyTracker` (brief section 13): per-subject levels 1–5,
+  persisted; 3 first-try corrects in a row level up, 2 misses in a row
+  gently level down — the child never sees a message about it, the
+  questions just fit better
+- `MathQuestionGenerator`: unlimited addition / subtraction /
+  comparison / sequence questions scaled to the tracker's level, with
+  countable emoji visuals for small quantities; reuses the quest
+  `ChoiceChallenge` model so generated questions can plug into quests
+  later
+- Mini-Games hub on Home (lists only games that exist) and the Math
+  Dash screen: 8-question rounds, first-try score, gentle retry on
+  misses, predictable reward stated up front (6+ right = +1 ⭐)
+- Tests: tracker leveling/persistence, generator correctness (sums,
+  no negative subtraction, bigger-number comparison, sequence
+  continuation), and deterministic widget tests for perfect rounds,
+  missed rounds and replay
+
+Not built yet: Memory/Pattern/Word/Find mini-games, coins/badges,
+companions, player room, Parent Zone. Those land in Phases 5–13.
 
 ## First-time setup
 
@@ -94,10 +112,15 @@ iOS support is architected for but not built yet — see the brief).
    all 10 quests (20 ⭐) opens every location including the Temple.
 8. Replay a completed quest: it's marked "Completed! Play again for
    practice" and awards no extra stars.
-9. Close and reopen the app: hero, stars, and completed quests all
-   persist.
-10. `flutter test` passes (all widget + unit tests).
-11. `flutter analyze` reports no errors.
+9. From **Home**, tap **Mini-Games** → **Math Dash**: the intro states
+   the reward rule ("Get 6 right on the first try to earn a ⭐"), then
+   8 puzzles — small counts appear as countable emoji. Answer 3 in a
+   row correctly across rounds and the questions quietly get harder;
+   struggle and they ease off.
+10. Close and reopen the app: hero, stars, completed quests and
+    difficulty levels all persist.
+11. `flutter test` passes (all widget + unit tests).
+12. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -119,6 +142,7 @@ lib/
     home/
     adventure_map/
     quests/                  # quest list / intro / play / celebration
+    mini_games/              # hub + Math Dash (more in Phases 5-6)
     room/                    # (Phase 9)
     parent_zone/             # (Phase 10)
   game/
@@ -126,9 +150,8 @@ lib/
     data/                    # HeroCustomizationCatalog
     repositories/            # HeroRepository, ProgressRepository, QuestRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
-    systems/                 # QuestEngine
+    systems/                 # QuestEngine, DifficultyTracker, MathQuestionGenerator
     quests/                  # JungleQuests content (10 quests, data only)
-    mini_games/               # (Phase 4-6)
     rewards/                   # (Phase 7)
     companions/                 # (Phase 8)
   shared/
