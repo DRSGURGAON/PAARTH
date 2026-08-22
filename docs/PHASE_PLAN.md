@@ -13,7 +13,7 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 8** — Companions
 - [x] **Phase 9** — Player room + character customization
 - [x] **Phase 10** — Parent Zone
-- [ ] **Phase 11** — Save system + offline persistence
+- [x] **Phase 11** — Save system + offline persistence
 - [ ] **Phase 12** — Polish: animations + sound
 - [ ] **Phase 13** — Testing + Android release build
 

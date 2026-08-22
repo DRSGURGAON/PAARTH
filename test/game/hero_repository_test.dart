@@ -44,5 +44,19 @@ void main() {
 
       expect(profile.hairOptionId, HeroCustomizationCatalog.hairOptions.first.id);
     });
+
+    test('hasSavedProfile is false until a hero is actually saved',
+        () async {
+      final repository = HeroRepository(FakeLocalStorageService());
+      expect(repository.hasSavedProfile, isFalse);
+
+      // load() alone must not count as "saved" — it only returns a
+      // usable default, it never writes anything back.
+      repository.load();
+      expect(repository.hasSavedProfile, isFalse);
+
+      await repository.save(HeroProfile.initial());
+      expect(repository.hasSavedProfile, isTrue);
+    });
   });
 }

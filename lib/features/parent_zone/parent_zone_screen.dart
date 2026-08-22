@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
+import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/duration_formatter.dart';
 import '../../game/models/quest.dart';
@@ -103,10 +104,57 @@ class ParentZoneScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 28),
+            const Divider(),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton.icon(
+                key: const ValueKey('reset_progress_button'),
+                onPressed: () => _confirmReset(context),
+                icon: const Icon(Icons.delete_forever_rounded, color: AppColors.gentleWarning),
+                label: const Text(
+                  'Reset All Progress',
+                  style: TextStyle(color: AppColors.gentleWarning),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmReset(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reset All Progress?'),
+        content: const Text(
+          'This clears every star, coin, quest, badge, companion, shop '
+          'purchase, and play-time record on this device. This cannot '
+          'be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            key: const ValueKey('confirm_reset_button'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    await AppScope.of(context).storage.clearAll();
+    if (!context.mounted) return;
+
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(RouteNames.welcome, (route) => false);
   }
 
   /// The lowest-level subject, ties broken by [ChallengeCategory.values]'

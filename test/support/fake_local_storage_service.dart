@@ -40,4 +40,10 @@ class FakeLocalStorageService implements LocalStorageService {
     _values.remove(key);
     return true;
   }
+
+  @override
+  Future<bool> clearAll() async {
+    _values.clear();
+    return true;
+  }
 }

@@ -13,6 +13,13 @@ class HeroRepository {
 
   static const String _storageKey = 'hero_profile_v1';
 
+  /// Whether a hero has ever been saved — distinct from [load], which
+  /// always returns a usable profile (falling back to
+  /// [HeroProfile.initial] for a first-time player). Welcome uses this
+  /// to decide between "PLAY" (build a hero) and "Continue Adventure"
+  /// (skip straight back in).
+  bool get hasSavedProfile => _storage.getString(_storageKey) != null;
+
   HeroProfile load() {
     final raw = _storage.getString(_storageKey);
     if (raw == null) return HeroProfile.initial();

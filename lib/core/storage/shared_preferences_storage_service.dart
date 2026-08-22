@@ -4,7 +4,7 @@ import 'local_storage_service.dart';
 
 /// [LocalStorageService] backed by `shared_preferences` — a flat,
 /// synchronous-read key/value store that's more than enough for V1's
-/// save data (see Phase 11 for the full save-game shape).
+/// save data.
 class SharedPreferencesStorageService implements LocalStorageService {
   SharedPreferences? _prefs;
 
@@ -46,4 +46,7 @@ class SharedPreferencesStorageService implements LocalStorageService {
 
   @override
   Future<bool> remove(String key) => _requirePrefs.remove(key);
+
+  @override
+  Future<bool> clearAll() => _requirePrefs.clear();
 }

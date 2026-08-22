@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 10 of 13 — Parent Zone
+## Status: Phase 11 of 13 — Save system + offline persistence
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -216,8 +216,40 @@ Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
   fresh-challenge/correct-answer flow, and the dashboard's stat and
   recommendation display against seeded progress
 
-Not built yet: full offline-persistence hardening (Phase 11), polish
-(Phase 12), and the Android release build (Phase 13).
+**Phase 11** —
+- The game has been offline-first and locally persisted since Phase 1
+  — every repository writes straight through `LocalStorageService`, no
+  network calls exist anywhere. This phase makes that save system
+  actually *visible and controllable* rather than adding new plumbing:
+- Welcome now recognizes a returning player (`HeroRepository.
+  hasSavedProfile`, distinct from `load()`'s always-usable default) and
+  shows **Continue Adventure** straight to Home, instead of making
+  them re-click through Hero Selection every single launch. A
+  first-time player still sees **PLAY** exactly as before
+- Parent Zone gained **Reset All Progress** (confirmation dialog, only
+  reachable behind the existing parent gate): clears every key via a
+  new `LocalStorageService.clearAll()` rather than a hand-maintained
+  list of keys that would silently drift out of sync as later phases
+  add more repositories, then returns to Welcome with the navigation
+  stack cleared
+- Audited every repository that stores JSON (hero, mini-game stars,
+  quests, room, shop, difficulty tracker): all six already catch
+  malformed data and fall back to sane defaults, confirmed consistent
+  rather than assumed
+- **Known, intentional scope boundary:** an in-progress mini-game
+  round or quest (e.g. closing the app mid-Math-Dash) is not resumed
+  exactly where it left off — only *completed* results are saved, same
+  as before this phase. Rebuilding full mid-session state serialization
+  wasn't asked for by the brief (Parent Zone wants completed quests
+  and play time, not round-by-round replay) and would be a much larger
+  change to make and verify without a compiler here
+- Tests: `hasSavedProfile`'s true save-vs-default distinction, both
+  Welcome branches and where each one navigates, and the Reset flow's
+  cancel-does-nothing / confirm-clears-everything-and-returns-to-
+  Welcome behavior
+
+Not built yet: polish (Phase 12) and the Android release build
+(Phase 13).
 
 ## First-time setup
 
@@ -331,8 +363,15 @@ iOS support is architected for but not built yet — see the brief).
 28. Play for a bit, then background/reopen the app (or just close and
     reopen it) — play time in Parent Zone increases to reflect real
     time spent in the app.
-29. `flutter test` passes (all widget + unit tests).
-30. `flutter analyze` reports no errors.
+29. Fully close and reopen the app: Welcome now shows **Continue
+    Adventure** instead of **PLAY**, and tapping it goes straight to
+    Home — no more rebuilding your hero every launch.
+30. In Parent Zone, scroll down and tap **Reset All Progress**: a
+    confirmation dialog appears. Tap **Cancel** — nothing changes.
+    Open it again and tap **Reset** — you're dropped back at Welcome,
+    which now shows **PLAY** again (a completely fresh save).
+31. `flutter test` passes (all widget + unit tests).
+32. `flutter analyze` reports no errors.
 
 ## Project structure
 
