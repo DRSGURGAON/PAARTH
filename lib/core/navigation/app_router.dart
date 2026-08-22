@@ -6,6 +6,8 @@ import '../../features/companions/companion_select_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/mini_games/mini_games_screen.dart';
 import '../../features/player/hero_selection_screen.dart';
+import '../../features/room/room_screen.dart';
+import '../../features/shop/shop_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/welcome/welcome_screen.dart';
 import 'route_names.dart';
@@ -35,6 +37,10 @@ class AppRouter {
         return _pageRoute(const CollectionScreen(), settings);
       case RouteNames.companions:
         return _pageRoute(const CompanionSelectScreen(), settings);
+      case RouteNames.room:
+        return _pageRoute(const RoomScreen(), settings);
+      case RouteNames.shop:
+        return _pageRoute(const ShopScreen(), settings);
       default:
         return _pageRoute(
           Scaffold(

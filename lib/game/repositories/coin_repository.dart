@@ -17,4 +17,14 @@ class CoinRepository {
     if (amount <= 0) return;
     await _storage.setInt(_coinsKey, coins + amount);
   }
+
+  /// Spends [amount] if the balance covers it, returning whether the
+  /// spend happened. Never leaves the balance negative — a spend that
+  /// can't be covered is simply refused, not partially applied.
+  Future<bool> spendCoins(int amount) async {
+    if (amount <= 0) return false;
+    if (coins < amount) return false;
+    await _storage.setInt(_coinsKey, coins - amount);
+    return true;
+  }
 }

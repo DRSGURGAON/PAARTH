@@ -11,4 +11,6 @@ class RouteNames {
   static const String miniGames = '/mini-games';
   static const String collection = '/collection';
   static const String companions = '/companions';
+  static const String room = '/room';
+  static const String shop = '/shop';
 }

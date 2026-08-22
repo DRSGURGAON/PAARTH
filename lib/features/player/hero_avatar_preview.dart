@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../game/data/hero_customization_catalog.dart';
+import '../../game/data/shop_catalog.dart';
 import '../../game/models/customization_option.dart';
 import '../../game/models/hero_profile.dart';
+import '../../game/models/shop_item.dart';
 
 /// Renders a [HeroProfile] as a simple layered "paper doll" — no
 /// production art yet (see README's Assets section), but every
@@ -16,24 +18,31 @@ class HeroAvatarPreview extends StatelessWidget {
 
   static const Color _skinTone = Color(0xFFF2C299);
 
-  Color _colorFor(List<CustomizationOption> options, String id) {
-    final match = options.firstWhere(
-      (option) => option.id == id,
-      orElse: () => options.first,
-    );
-    return match.color;
+  /// Resolves a chosen option id to its color, checking the free
+  /// starter [options] first and then [ShopCatalog] — a hero profile
+  /// can reference a purchased shop item id that never appears in the
+  /// free catalog, so both have to be searched to render correctly.
+  Color _colorFor(List<CustomizationOption> options, ShopCategory shopCategory,
+      String id) {
+    for (final option in options) {
+      if (option.id == id) return option.color;
+    }
+    for (final item in ShopCatalog.itemsFor(shopCategory)) {
+      if (item.id == id) return item.color;
+    }
+    return options.first.color;
   }
 
   @override
   Widget build(BuildContext context) {
-    final hairColor =
-        _colorFor(HeroCustomizationCatalog.hairOptions, profile.hairOptionId);
-    final outfitColor = _colorFor(
-        HeroCustomizationCatalog.outfitOptions, profile.outfitOptionId);
-    final shoesColor =
-        _colorFor(HeroCustomizationCatalog.shoesOptions, profile.shoesOptionId);
-    final backpackColor = _colorFor(
-        HeroCustomizationCatalog.backpackOptions, profile.backpackOptionId);
+    final hairColor = _colorFor(
+        HeroCustomizationCatalog.hairOptions, ShopCategory.hair, profile.hairOptionId);
+    final outfitColor = _colorFor(HeroCustomizationCatalog.outfitOptions,
+        ShopCategory.outfit, profile.outfitOptionId);
+    final shoesColor = _colorFor(HeroCustomizationCatalog.shoesOptions,
+        ShopCategory.shoes, profile.shoesOptionId);
+    final backpackColor = _colorFor(HeroCustomizationCatalog.backpackOptions,
+        ShopCategory.backpack, profile.backpackOptionId);
 
     return SizedBox(
       width: size,

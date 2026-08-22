@@ -4,9 +4,12 @@ import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/hero_customization_catalog.dart';
+import '../../game/data/shop_catalog.dart';
 import '../../game/models/customization_option.dart';
 import '../../game/models/hero_profile.dart';
+import '../../game/models/shop_item.dart';
 import '../../game/repositories/hero_repository.dart';
+import '../../game/repositories/shop_repository.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import 'hero_avatar_preview.dart';
 
@@ -23,6 +26,10 @@ class HeroSelectionScreen extends StatefulWidget {
 class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
   late HeroRepository _heroRepository;
   late HeroProfile _profile;
+  late List<CustomizationOption> _hairOptions;
+  late List<CustomizationOption> _outfitOptions;
+  late List<CustomizationOption> _shoesOptions;
+  late List<CustomizationOption> _backpackOptions;
   bool _loaded = false;
 
   @override
@@ -34,9 +41,35 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
     // reparenting) — guard with `_loaded` so a repeat call can't throw on
     // a `late` field or silently discard in-progress unsaved edits.
     if (_loaded) return;
-    _heroRepository = HeroRepository(AppScope.of(context).storage);
+    final storage = AppScope.of(context).storage;
+    _heroRepository = HeroRepository(storage);
     _profile = _heroRepository.load();
+    final owned = ShopRepository(storage).ownedItemIds();
+    _hairOptions = _withOwnedShopItems(
+        HeroCustomizationCatalog.hairOptions, ShopCategory.hair, owned);
+    _outfitOptions = _withOwnedShopItems(
+        HeroCustomizationCatalog.outfitOptions, ShopCategory.outfit, owned);
+    _shoesOptions = _withOwnedShopItems(
+        HeroCustomizationCatalog.shoesOptions, ShopCategory.shoes, owned);
+    _backpackOptions = _withOwnedShopItems(
+        HeroCustomizationCatalog.backpackOptions, ShopCategory.backpack, owned);
     _loaded = true;
+  }
+
+  /// The free starter swatches plus any shop items the child has
+  /// bought for this category — a purchase should show up as a new
+  /// pickable swatch here, not just sit unused in the Shop.
+  List<CustomizationOption> _withOwnedShopItems(
+    List<CustomizationOption> freeOptions,
+    ShopCategory category,
+    Set<String> ownedItemIds,
+  ) {
+    return [
+      ...freeOptions,
+      for (final item in ShopCatalog.itemsFor(category))
+        if (ownedItemIds.contains(item.id))
+          CustomizationOption(id: item.id, label: item.label, color: item.color),
+    ];
   }
 
   void _select({
@@ -77,25 +110,25 @@ class _HeroSelectionScreenState extends State<HeroSelectionScreen> {
                 children: [
                   _CategoryPicker(
                     label: 'Hair',
-                    options: HeroCustomizationCatalog.hairOptions,
+                    options: _hairOptions,
                     selectedId: _profile.hairOptionId,
                     onSelected: (id) => _select(hairOptionId: id),
                   ),
                   _CategoryPicker(
                     label: 'Outfit',
-                    options: HeroCustomizationCatalog.outfitOptions,
+                    options: _outfitOptions,
                     selectedId: _profile.outfitOptionId,
                     onSelected: (id) => _select(outfitOptionId: id),
                   ),
                   _CategoryPicker(
                     label: 'Shoes',
-                    options: HeroCustomizationCatalog.shoesOptions,
+                    options: _shoesOptions,
                     selectedId: _profile.shoesOptionId,
                     onSelected: (id) => _select(shoesOptionId: id),
                   ),
                   _CategoryPicker(
                     label: 'Backpack',
-                    options: HeroCustomizationCatalog.backpackOptions,
+                    options: _backpackOptions,
                     selectedId: _profile.backpackOptionId,
                     onSelected: (id) => _select(backpackOptionId: id),
                   ),
@@ -149,6 +182,7 @@ class _CategoryPicker extends StatelessWidget {
               final option = options[index];
               final isSelected = option.id == selectedId;
               return _Swatch(
+                key: ValueKey('swatch_${option.id}'),
                 option: option,
                 isSelected: isSelected,
                 onTap: () => onSelected(option.id),
@@ -167,6 +201,7 @@ class _Swatch extends StatelessWidget {
     required this.option,
     required this.isSelected,
     required this.onTap,
+    super.key,
   });
 
   final CustomizationOption option;

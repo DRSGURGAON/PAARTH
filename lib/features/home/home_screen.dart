@@ -44,6 +44,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openRoom() async {
+    await Navigator.of(context).pushNamed(RouteNames.room);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
@@ -61,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             children: [
@@ -81,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(height: 20),
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -113,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
-              const Spacer(flex: 2),
+              const SizedBox(height: 24),
               BigRoundedButton(
                 label: 'Adventure Map',
                 icon: Icons.map_rounded,
@@ -140,6 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.pets_rounded,
                 backgroundColor: AppColors.leafGreen,
                 onPressed: _openCompanions,
+              ),
+              const SizedBox(height: 12),
+              BigRoundedButton(
+                label: 'My Room',
+                icon: Icons.chair_rounded,
+                backgroundColor: AppColors.skyBlue,
+                onPressed: _openRoom,
               ),
               const SizedBox(height: 16),
             ],

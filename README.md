@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 8 of 13 — Companions
+## Status: Phase 9 of 13 — Player room + character customization
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -152,9 +152,43 @@ Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
   the correct answer, Panda's exact 1.5x timing, Monkey's hint always
   points at a real target, Puppy's placed letter always matches)
 
-Not built yet: player room, Parent Zone, coin-spending UI (coins
-accumulate now; Phase 9 builds what they buy). Those land in
-Phases 9–13.
+**Phase 9** —
+- `ShopCatalog`: 16 coin-priced items across 8 slots — the 4 existing
+  hero categories (2 extra colors each, extending the free starter
+  swatches rather than replacing them) plus 4 brand-new Player Room
+  decoration slots (wall art, rug, plant, lamp)
+- `CoinRepository` gained `spendCoins()` — the first place coins are
+  actually spent; it refuses (and changes nothing) if the balance is
+  short, so a purchase can never leave a negative balance
+- `ShopRepository` / `RoomRepository`: what's been bought (a plain
+  owned-ids set, same shape as Phase 8's companion unlocks) and what's
+  equipped in each room slot (nullable per slot — a room starts
+  genuinely empty, unlike the hero's always-has-a-default categories)
+- **Shop screen**: every item, grouped by slot, with a Buy button that
+  only ever enables when it's both unowned and affordable — no
+  loot boxes, no randomness, every purchase is a specific named item
+  at a fixed price
+- **My Room screen**: 4 tappable slots around the hero; each opens a
+  picker of just the items owned for that slot (plus "None") to equip
+  — nothing sells directly from here, only from the Shop
+- Hero Selection now shows any purchased hair/outfit/shoes/backpack
+  color as an extra swatch alongside the free starter ones, and
+  actually renders in that color once equipped (fixed a real bug along
+  the way: the avatar preview used to only look up colors in the free
+  catalog, so an equipped shop color would have silently rendered as
+  whichever free color came first)
+- Home gained a **My Room** entry point; its layout is now scrollable
+  so it keeps working as more entry points get added in later phases
+  instead of silently overflowing off small screens
+- Tests: catalog correctness (unique ids, every category covered,
+  hero/room partition), `spendCoins`' insufficient-funds and
+  exact-balance edge cases, Shop's afford/owned button states and that
+  buying actually spends+records, Room's empty/equip/clear slot flow
+  and its Shop hand-off, Hero Selection's shop-swatch appearance and
+  save, and a regression test for the avatar-color bug above
+
+Not built yet: Parent Zone, full offline-persistence hardening. Those
+land in Phases 10–13.
 
 ## First-time setup
 
@@ -245,8 +279,20 @@ iOS support is architected for but not built yet — see the brief).
     letter already placed ("Puppy sniffed out the first letter!").
 22. Only one companion can be equipped at a time; the active one also
     shows as a small badge on the Home hero avatar.
-23. `flutter test` passes (all widget + unit tests).
-24. `flutter analyze` reports no errors.
+23. On Home, tap **My Room**: 4 empty decoration slots around your
+    hero. Tap **Visit Shop**: every item grouped under Hero/Room, each
+    with a price; a Buy button only lights up once you can actually
+    afford it, and switches to "Owned" (disabled) right after buying.
+24. Back in My Room, tap a slot you bought something for — a picker
+    lists just what you own for that spot, plus "None". Equip one and
+    it shows in the room; pick None and the slot goes back to "tap to
+    add".
+25. In My Room, tap your hero ("Tap to customize") to reopen Build
+    Your Hero: any hair/outfit/shoes/backpack color you bought shows
+    up as an extra swatch alongside the free ones, and the avatar
+    actually renders in that color once picked and saved.
+26. `flutter test` passes (all widget + unit tests).
+27. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -271,13 +317,15 @@ lib/
     mini_games/              # hub + all 5 mini-games
     collection/               # badge grid screen
     companions/                 # "My Companions" selection screen
-    room/                    # (Phase 9)
+    room/                    # "My Room" decoration screen
+    shop/                    # coin shop screen
     parent_zone/             # (Phase 10)
   game/
-    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, Companion, ...
-    data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog, CompanionCatalog
+    models/                 # HeroProfile, WorldLocation, Quest, WordPuzzle, FindScene, GameBadge, Companion, ShopItem, RoomProfile, ...
+    data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog, CompanionCatalog, ShopCatalog
     repositories/            # HeroRepository, ProgressRepository, CoinRepository,
-                              # QuestRepository, MiniGameRepository, CompanionRepository
+                              # QuestRepository, MiniGameRepository, CompanionRepository,
+                              # ShopRepository, RoomRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
     systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators
     quests/                  # JungleQuests content (10 quests, data only)
