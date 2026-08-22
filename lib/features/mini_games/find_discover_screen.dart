@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/audio/feedback_service.dart';
+import '../../core/audio/sound_event.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/companion_catalog.dart';
@@ -13,6 +15,7 @@ import '../../game/repositories/mini_game_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/find_scene_generator.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/pop_in.dart';
 
 /// Find & Discover: tap every copy of the target object hiding among
 /// decoys. No penalty for a wrong tap — it just doesn't count toward a
@@ -47,6 +50,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late FeedbackService _feedbackService;
   late bool _monkeyActive;
   bool _loaded = false;
 
@@ -78,6 +82,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _feedbackService = FeedbackService(storage);
     _monkeyActive = CompanionRepository(storage).selectedCompanionId ==
         CompanionIds.monkey;
     _loaded = true;
@@ -110,6 +115,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
     final item = _scene.items[index];
 
     if (item.isTarget) {
+      _feedbackService.play(SoundEvent.correct);
       setState(() {
         _found[index] = true;
         _foundCount++;
@@ -118,6 +124,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
       return;
     }
 
+    _feedbackService.play(SoundEvent.incorrect);
     setState(() {
       _mistakeMade = true;
       _shaking.add(index);
@@ -138,6 +145,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
         _starEarned = true;
       }
       if (!mounted) return;
+      if (_starEarned) _feedbackService.play(SoundEvent.reward);
       setState(() => _phase = _RoundPhase.results);
       return;
     }
@@ -320,19 +328,21 @@ class _ResultsView extends StatelessWidget {
     return Column(
       children: [
         const Spacer(),
-        Container(
-          width: 120,
-          height: 120,
-          decoration: const BoxDecoration(
-            color: AppColors.sunshineYellow,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            starEarned
-                ? Icons.emoji_events_rounded
-                : Icons.sentiment_satisfied_rounded,
-            size: 64,
-            color: Colors.white,
+        PopIn(
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: const BoxDecoration(
+              color: AppColors.sunshineYellow,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              starEarned
+                  ? Icons.emoji_events_rounded
+                  : Icons.sentiment_satisfied_rounded,
+              size: 64,
+              color: Colors.white,
+            ),
           ),
         ),
         const SizedBox(height: 24),

@@ -6,6 +6,7 @@ import 'package:super_kid_adventure/features/mini_games/math_dash_screen.dart';
 import 'package:super_kid_adventure/game/data/companion_catalog.dart';
 import 'package:super_kid_adventure/game/repositories/companion_repository.dart';
 import 'package:super_kid_adventure/game/repositories/progress_repository.dart';
+import 'package:super_kid_adventure/shared/widgets/shake_widget.dart';
 
 import 'support/fake_local_storage_service.dart';
 
@@ -140,6 +141,25 @@ void main() {
         findsOneWidget);
     // A fresh hint is offered again on the new question.
     expect(find.byKey(const ValueKey('robot_hint_button')), findsOneWidget);
+  });
+
+  testWidgets('a wrong answer actually plays the shake animation',
+      (tester) async {
+    await tester.pumpWidget(await buildHarness());
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pumpAndSettle();
+
+    final challenge = stateOf(tester).currentChallenge;
+    final wrongIndex = (challenge.correctIndex + 1) % challenge.options.length;
+    await tester.tap(find.byKey(ValueKey('option_$wrongIndex')));
+    await tester.pump(const Duration(milliseconds: 80));
+
+    final shakeState =
+        tester.state<ShakeWidgetState>(find.byType(ShakeWidget));
+    expect(shakeState.offset.value, isNot(0));
+
+    await tester.pumpAndSettle();
+    expect(shakeState.offset.value, 0);
   });
 
   testWidgets('without Robot equipped, no hint button is offered',

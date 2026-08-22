@@ -8,7 +8,7 @@ words) is woven into story-driven quests rather than presented as a quiz.
 
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
 
-## Status: Phase 11 of 13 — Save system + offline persistence
+## Status: Phase 12 of 13 — Polish: animations + sound
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -248,8 +248,46 @@ Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
   cancel-does-nothing / confirm-clears-everything-and-returns-to-
   Welcome behavior
 
-Not built yet: polish (Phase 12) and the Android release build
-(Phase 13).
+**Phase 12** —
+- **Sound — an honest scope note first**: no production audio assets
+  exist in this repo (see Assets below), and this sandbox has no way
+  to author or license real ones, so an asset-based music/SFX player
+  here would be exactly the fake functionality the project rules out —
+  a player pointed at files that don't exist. Instead, `FeedbackService`
+  uses Flutter's own built-in, asset-free feedback: `SystemSound` (a
+  short native click/alert) and `HapticFeedback` (real device
+  vibration). It's genuine, working feedback today; swapping in real
+  asset-based sound later (e.g. via `audioplayers`) only means changing
+  this one class, since every call site just says what *happened*
+  (`SoundEvent.correct/incorrect/reward/purchase`), never *how* it
+  sounds
+- Wired into every place the game already knows something good, bad,
+  or reward-worthy just happened: all 5 mini-games, quests, the parent
+  gate, and shop purchases — both the sound and the settings gate share
+  one `play()` call per site, so there's nothing to keep in sync
+- New `SettingsRepository` (sound/haptics, both on by default) is
+  checked live on every `play()` call, and Parent Zone now has toggles
+  for both — a change takes effect on the very next event, not after a
+  screen reload
+- **Animations** — two small, reusable, pure-Flutter widgets (no new
+  dependencies): `ShakeWidget` (a real horizontal shake, driven by an
+  actual `TweenSequence`, not a fake placeholder) on every wrong-answer
+  moment that didn't already have its own visual feedback (quests,
+  Math Dash, Pattern Power, Memory Master, the parent gate — Word
+  Builder and Find & Discover keep their existing letter-return/red-
+  flash feedback rather than layering a second animation on top), and
+  `PopIn` (a bouncy scale-in) on every mini-game's static results icon.
+  Quest Complete already had its own real celebration animation from
+  Phase 3 — left untouched, just given a matching reward sound
+- Tests: `FeedbackService`'s full sound/haptic-to-event mapping and
+  settings-gating (using injected spy functions, the same pattern as
+  the play-time tracker's injectable clock), `SettingsRepository`
+  persistence, both new widgets in isolation, and — to prove the
+  wiring is actually connected, not just present — a handful of
+  integration checks that a real wrong answer visibly shakes the
+  screen in the quest flow, Math Dash, and the parent gate
+
+Not built yet: the Android release build (Phase 13).
 
 ## First-time setup
 
@@ -370,8 +408,17 @@ iOS support is architected for but not built yet — see the brief).
     confirmation dialog appears. Tap **Cancel** — nothing changes.
     Open it again and tap **Reset** — you're dropped back at Welcome,
     which now shows **PLAY** again (a completely fresh save).
-31. `flutter test` passes (all widget + unit tests).
-32. `flutter analyze` reports no errors.
+31. Answer a question wrong anywhere it wasn't already handled (a
+    quest, Math Dash, Pattern Power, Memory Master, the parent gate):
+    the options/prompt actually shake, and — on a real device with the
+    volume up and haptics on — you'll feel/hear it too. Every mini-game's
+    results screen now pops its trophy/face icon in with a little
+    bounce instead of just appearing.
+32. In Parent Zone, toggle **Sound Effects** and **Haptic Feedback**
+    off. Go play — no more click/vibration on answers. Turn them back
+    on and they resume immediately, no restart needed.
+33. `flutter test` passes (all widget + unit tests).
+34. `flutter analyze` reports no errors.
 
 ## Project structure
 
@@ -387,7 +434,7 @@ lib/
     theme/                 # colors + ThemeData
     tracking/                # PlayTimeTracker (app-lifecycle play time)
     utils/                   # DurationFormatter
-    audio/                 # (Phase 12)
+    audio/                   # SoundEvent, FeedbackService (system sound + haptics)
   features/
     splash/
     welcome/
@@ -406,15 +453,18 @@ lib/
     data/                    # HeroCustomizationCatalog, WordBank, BadgeCatalog, CompanionCatalog, ShopCatalog
     repositories/            # HeroRepository, ProgressRepository, CoinRepository,
                               # QuestRepository, MiniGameRepository, CompanionRepository,
-                              # ShopRepository, RoomRepository, PlayTimeRepository
+                              # ShopRepository, RoomRepository, PlayTimeRepository,
+                              # SettingsRepository
     worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
     systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators,
                               # ParentGateChallengeGenerator
     quests/                  # JungleQuests content (10 quests, data only)
   shared/
-    widgets/                 # BigRoundedButton, PlaceholderScreen, ...
+    widgets/                 # BigRoundedButton, ShakeWidget, PopIn, PlaceholderScreen, ...
 test/
   game/                     # unit tests for repositories + models
+  core/                     # DurationFormatter, PlayTimeTracker, FeedbackService
+  shared/                   # ShakeWidget, PopIn
   support/                  # FakeLocalStorageService
 ```
 
@@ -426,3 +476,8 @@ illustrations — see `lib/features/player/hero_avatar_preview.dart` and
 `lib/game/worlds/jungle_world.dart`. No copyrighted third-party
 characters are used anywhere in this project. A real asset manifest will
 be added once professional art starts replacing these placeholders.
+Sound is likewise not asset-based yet — Phase 12's `FeedbackService`
+uses Flutter's built-in `SystemSound`/`HapticFeedback` for genuine,
+working feedback without needing licensed audio files; see Phase 12's
+README section above for why, and how it's structured so real
+asset-based sound can replace it later without touching call sites.

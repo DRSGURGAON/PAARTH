@@ -8,6 +8,7 @@ import '../../game/models/quest.dart';
 import '../../game/quests/jungle_quests.dart';
 import '../../game/repositories/play_time_repository.dart';
 import '../../game/repositories/quest_repository.dart';
+import '../../game/repositories/settings_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
 
 /// The Parent Zone dashboard (design brief: "Shows play time, quests
@@ -105,6 +106,10 @@ class ParentZoneScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
+            const Divider(),
+            const SizedBox(height: 8),
+            const _SettingsSection(),
+            const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 8),
             Center(
@@ -208,6 +213,69 @@ class _StatCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Sound Effects / Haptic Feedback toggles, both on by default (see
+/// [SettingsRepository]). Its own small stateful island rather than
+/// making the whole dashboard stateful, since nothing else on this
+/// screen needs to react to a local toggle without a full re-open.
+class _SettingsSection extends StatefulWidget {
+  const _SettingsSection();
+
+  @override
+  State<_SettingsSection> createState() => _SettingsSectionState();
+}
+
+class _SettingsSectionState extends State<_SettingsSection> {
+  late SettingsRepository _settings;
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_loaded) return;
+    _settings = SettingsRepository(AppScope.of(context).storage);
+    _loaded = true;
+  }
+
+  Future<void> _setSoundEnabled(bool value) async {
+    await _settings.setSoundEnabled(value);
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _setHapticsEnabled(bool value) async {
+    await _settings.setHapticsEnabled(value);
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Sound & Haptics',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        SwitchListTile(
+          key: const ValueKey('sound_toggle'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Sound Effects'),
+          value: _settings.soundEnabled,
+          onChanged: _setSoundEnabled,
+        ),
+        SwitchListTile(
+          key: const ValueKey('haptics_toggle'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Haptic Feedback'),
+          value: _settings.hapticsEnabled,
+          onChanged: _setHapticsEnabled,
+        ),
+      ],
     );
   }
 }

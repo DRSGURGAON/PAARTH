@@ -4,6 +4,7 @@ import 'package:super_kid_adventure/app.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
 import 'package:super_kid_adventure/game/systems/quest_engine.dart';
+import 'package:super_kid_adventure/shared/widgets/shake_widget.dart';
 
 import 'support/fake_local_storage_service.dart';
 
@@ -130,7 +131,15 @@ void main() {
         (challenge.correctIndex + 1) % challenge.options.length;
 
     await tester.tap(find.byKey(ValueKey('option_$wrongIndex')));
+    await tester.pump(const Duration(milliseconds: 80));
+
+    // The wrong answer actually triggers the options' shake animation,
+    // not just the encouragement text.
+    final shakeState = tester
+        .state<ShakeWidgetState>(find.byType(ShakeWidget));
+    expect(shakeState.offset.value, isNot(0));
     await tester.pumpAndSettle();
+    expect(shakeState.offset.value, 0);
 
     // Gentle encouragement, still on the same challenge.
     expect(find.textContaining('Almost!'), findsOneWidget);

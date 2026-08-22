@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/audio/feedback_service.dart';
+import '../../core/audio/sound_event.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/companion_catalog.dart';
@@ -16,6 +18,8 @@ import '../../game/systems/difficulty_tracker.dart';
 import '../../game/systems/memory_round_generator.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/pop_in.dart';
+import '../../shared/widgets/shake_widget.dart';
 
 /// Memory Master: show a set of objects, hide them, then ask what was
 /// remembered (position / sequence / object / number — brief section
@@ -42,6 +46,7 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
   late ProgressRepository _progressRepository;
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
+  late FeedbackService _feedbackService;
   late bool _pandaActive;
   bool _loaded = false;
 
@@ -53,6 +58,7 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
   bool _firstAttempt = true;
   bool _starEarned = false;
   String? _feedback;
+  int _shakeSignal = 0;
 
   @visibleForTesting
   MemoryRound get currentRound => _round;
@@ -72,6 +78,7 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
     _progressRepository = ProgressRepository(storage);
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
+    _feedbackService = FeedbackService(storage);
     _pandaActive =
         CompanionRepository(storage).selectedCompanionId == CompanionIds.panda;
     _loaded = true;
@@ -112,10 +119,12 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
     if (!mounted) return;
 
     if (!correct) {
+      _feedbackService.play(SoundEvent.incorrect);
       setState(() {
         _firstAttempt = false;
         _feedback = QuestEngine
             .encouragements[_roundNumber % QuestEngine.encouragements.length];
+        _shakeSignal++;
       });
       return;
     }
@@ -128,10 +137,13 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
         _starEarned = true;
       }
       if (!mounted) return;
+      _feedbackService
+          .play(_starEarned ? SoundEvent.reward : SoundEvent.correct);
       setState(() => _phase = _RoundPhase.results);
       return;
     }
 
+    _feedbackService.play(SoundEvent.correct);
     setState(() {
       _roundNumber++;
       _feedback = null;
@@ -233,19 +245,27 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
                 ),
         ),
         const Spacer(),
-        for (var i = 0; i < question.options.length; i++) ...[
-          FilledButton(
-            key: ValueKey('option_$i'),
-            onPressed: () => _submit(i),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.inkNavy,
-              textStyle: const TextStyle(fontSize: 24),
-            ),
-            child: Text(question.options[i]),
+        ShakeWidget(
+          shakeSignal: _shakeSignal,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < question.options.length; i++) ...[
+                FilledButton(
+                  key: ValueKey('option_$i'),
+                  onPressed: () => _submit(i),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.inkNavy,
+                    textStyle: const TextStyle(fontSize: 24),
+                  ),
+                  child: Text(question.options[i]),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
           ),
-          const SizedBox(height: 12),
-        ],
+        ),
       ],
     );
   }
@@ -322,19 +342,21 @@ class _ResultsView extends StatelessWidget {
     return Column(
       children: [
         const Spacer(),
-        Container(
-          width: 120,
-          height: 120,
-          decoration: const BoxDecoration(
-            color: AppColors.sunshineYellow,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            starEarned
-                ? Icons.emoji_events_rounded
-                : Icons.sentiment_satisfied_rounded,
-            size: 64,
-            color: Colors.white,
+        PopIn(
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: const BoxDecoration(
+              color: AppColors.sunshineYellow,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              starEarned
+                  ? Icons.emoji_events_rounded
+                  : Icons.sentiment_satisfied_rounded,
+              size: 64,
+              color: Colors.white,
+            ),
           ),
         ),
         const SizedBox(height: 24),

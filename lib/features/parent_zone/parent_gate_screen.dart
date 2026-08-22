@@ -4,11 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/audio/feedback_service.dart';
+import '../../core/audio/sound_event.dart';
+import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/parent_gate_challenge.dart';
 import '../../game/systems/parent_gate_challenge_generator.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/shake_widget.dart';
 
 /// A simple "grown-ups only" gate in front of the Parent Zone (design
 /// brief: "Behind an age-appropriate parent gate (V1: simple gate,
@@ -29,8 +33,11 @@ class ParentGateScreen extends StatefulWidget {
 class ParentGateScreenState extends State<ParentGateScreen> {
   late ParentGateChallengeGenerator _generator;
   late ParentGateChallenge _challenge;
+  late FeedbackService _feedbackService;
+  bool _loaded = false;
   final TextEditingController _controller = TextEditingController();
   String? _error;
+  int _shakeSignal = 0;
 
   @visibleForTesting
   ParentGateChallenge get currentChallenge => _challenge;
@@ -43,6 +50,14 @@ class ParentGateScreenState extends State<ParentGateScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_loaded) return;
+    _feedbackService = FeedbackService(AppScope.of(context).storage);
+    _loaded = true;
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -51,13 +66,16 @@ class ParentGateScreenState extends State<ParentGateScreen> {
   void _submit() {
     final entered = int.tryParse(_controller.text);
     if (entered == _challenge.answer) {
+      _feedbackService.play(SoundEvent.correct);
       Navigator.of(context).pushReplacementNamed(RouteNames.parentZone);
       return;
     }
+    _feedbackService.play(SoundEvent.incorrect);
     setState(() {
       _error = 'Not quite — try again.';
       _challenge = _generator.next();
       _controller.clear();
+      _shakeSignal++;
     });
   }
 
@@ -81,21 +99,29 @@ class ParentGateScreenState extends State<ParentGateScreen> {
                 style: textTheme.titleLarge,
               ),
               const SizedBox(height: 24),
-              Text(
-                _challenge.prompt,
-                textAlign: TextAlign.center,
-                style: textTheme.displayMedium,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                key: const ValueKey('parent_gate_input'),
-                controller: _controller,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                textAlign: TextAlign.center,
-                style: textTheme.headlineMedium,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                onSubmitted: (_) => _submit(),
+              ShakeWidget(
+                shakeSignal: _shakeSignal,
+                child: Column(
+                  children: [
+                    Text(
+                      _challenge.prompt,
+                      textAlign: TextAlign.center,
+                      style: textTheme.displayMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      key: const ValueKey('parent_gate_input'),
+                      controller: _controller,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineMedium,
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
+                      onSubmitted: (_) => _submit(),
+                    ),
+                  ],
+                ),
               ),
               SizedBox(
                 height: 32,

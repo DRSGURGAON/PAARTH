@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/audio/feedback_service.dart';
+import '../../core/audio/sound_event.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/shop_catalog.dart';
@@ -24,6 +26,7 @@ class ShopScreen extends StatefulWidget {
 class ShopScreenState extends State<ShopScreen> {
   late CoinRepository _coinRepository;
   late ShopRepository _shopRepository;
+  late FeedbackService _feedbackService;
   bool _loaded = false;
 
   @override
@@ -33,6 +36,7 @@ class ShopScreenState extends State<ShopScreen> {
     final storage = AppScope.of(context).storage;
     _coinRepository = CoinRepository(storage);
     _shopRepository = ShopRepository(storage);
+    _feedbackService = FeedbackService(storage);
     _loaded = true;
   }
 
@@ -41,6 +45,7 @@ class ShopScreenState extends State<ShopScreen> {
     if (!spent) return;
     await _shopRepository.markOwned(item.id);
     if (!mounted) return;
+    _feedbackService.play(SoundEvent.purchase);
     setState(() {});
   }
 

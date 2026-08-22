@@ -7,6 +7,7 @@ import 'package:super_kid_adventure/core/navigation/app_router.dart';
 import 'package:super_kid_adventure/core/theme/app_theme.dart';
 import 'package:super_kid_adventure/features/parent_zone/parent_gate_screen.dart';
 import 'package:super_kid_adventure/game/systems/parent_gate_challenge_generator.dart';
+import 'package:super_kid_adventure/shared/widgets/shake_widget.dart';
 
 import 'support/fake_local_storage_service.dart';
 
@@ -56,7 +57,15 @@ void main() {
       '${firstChallenge.answer + 1}',
     );
     await tester.tap(find.text('Continue'));
+    await tester.pump(const Duration(milliseconds: 80));
+
+    // The wrong answer actually shakes the challenge, not just the text.
+    final shakeState =
+        tester.state<ShakeWidgetState>(find.byType(ShakeWidget));
+    expect(shakeState.offset.value, isNot(0));
+
     await tester.pumpAndSettle();
+    expect(shakeState.offset.value, 0);
 
     expect(find.text('Not quite — try again.'), findsOneWidget);
     // Still on the gate, not the Parent Zone.

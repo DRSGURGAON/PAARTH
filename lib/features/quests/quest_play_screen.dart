@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/audio/feedback_service.dart';
+import '../../core/audio/sound_event.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
@@ -7,6 +9,7 @@ import '../../game/repositories/coin_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/systems/quest_engine.dart';
+import '../../shared/widgets/shake_widget.dart';
 import 'quest_complete_screen.dart';
 
 /// Plays a quest's challenges one at a time: big visual, short prompt,
@@ -24,8 +27,10 @@ class QuestPlayScreen extends StatefulWidget {
 
 class _QuestPlayScreenState extends State<QuestPlayScreen> {
   late QuestEngine _engine;
+  late FeedbackService _feedbackService;
   bool _loaded = false;
   String? _feedback;
+  int _shakeSignal = 0;
 
   @override
   void didChangeDependencies() {
@@ -41,6 +46,7 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
       questRepository: QuestRepository(storage),
       coinRepository: CoinRepository(storage),
     );
+    _feedbackService = FeedbackService(storage);
     _loaded = true;
   }
 
@@ -51,14 +57,20 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
 
     switch (result) {
       case AnswerResult.incorrect:
-        setState(() => _feedback = _engine.nextEncouragement());
+        _feedbackService.play(SoundEvent.incorrect);
+        setState(() {
+          _feedback = _engine.nextEncouragement();
+          _shakeSignal++;
+        });
       case AnswerResult.advanced:
+        _feedbackService.play(SoundEvent.correct);
         setState(() => _feedback = null);
         if (challenge.rewardLabel != null) {
           await _showRewardDialog(challenge.rewardLabel!);
         }
         if (mounted) setState(() {});
       case AnswerResult.completed:
+        _feedbackService.play(SoundEvent.correct);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
             builder: (_) => QuestCompleteScreen(
@@ -150,18 +162,26 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
                       ),
               ),
               const Spacer(),
-              for (var i = 0; i < challenge.options.length; i++) ...[
-                FilledButton(
-                  key: ValueKey('option_$i'),
-                  onPressed: () => _submit(i),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.inkNavy,
-                  ),
-                  child: Text(challenge.options[i]),
+              ShakeWidget(
+                shakeSignal: _shakeSignal,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < challenge.options.length; i++) ...[
+                      FilledButton(
+                        key: ValueKey('option_$i'),
+                        onPressed: () => _submit(i),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.inkNavy,
+                        ),
+                        child: Text(challenge.options[i]),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 12),
-              ],
+              ),
             ],
           ),
         ),

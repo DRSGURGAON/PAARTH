@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/audio/feedback_service.dart';
+import '../../core/audio/sound_event.dart';
+import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
 import '../../shared/widgets/big_rounded_button.dart';
@@ -26,6 +29,7 @@ class _QuestCompleteScreenState extends State<QuestCompleteScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scale;
+  bool _soundPlayed = false;
 
   @override
   void initState() {
@@ -36,6 +40,16 @@ class _QuestCompleteScreenState extends State<QuestCompleteScreen>
     );
     _scale = CurvedAnimation(parent: _controller, curve: Curves.elasticOut);
     _controller.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_soundPlayed) return;
+    _soundPlayed = true;
+    if (widget.starsAwarded > 0) {
+      FeedbackService(AppScope.of(context).storage).play(SoundEvent.reward);
+    }
   }
 
   @override
