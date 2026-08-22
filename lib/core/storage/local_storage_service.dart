@@ -2,7 +2,8 @@
 /// state locally." Game and feature code should depend on this interface,
 /// never on `SharedPreferences` directly — that keeps the door open for
 /// swapping the backing store (e.g. to a structured DB, or adding cloud
-/// sync in Phase 11+) without touching call sites.
+/// sync) without touching call sites. No such swap is planned in V1;
+/// this is the reason it would be cheap if one were ever needed.
 abstract class LocalStorageService {
   /// Must be called once before first read/write (e.g. in `main()`).
   Future<void> init();

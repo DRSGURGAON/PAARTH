@@ -73,5 +73,19 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test('load() falls back to an empty profile on corrupted save data',
+        () async {
+      final storage = FakeLocalStorageService();
+      await storage.setString('room_profile_v1', 'not valid json {');
+      final repository = RoomRepository(storage);
+
+      final profile = repository.load();
+
+      expect(profile.wallArtItemId, isNull);
+      expect(profile.rugItemId, isNull);
+      expect(profile.plantItemId, isNull);
+      expect(profile.lampItemId, isNull);
+    });
   });
 }

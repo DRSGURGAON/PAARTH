@@ -3,12 +3,16 @@
 **Play. Learn. Explore. Become a Super Kid!**
 
 An offline-first adventure game for kids ~6–9 years old (Class 2 / age 7
-focus), built with Flutter + Flame. Learning (math, memory, patterns,
+focus), built with Flutter. Learning (math, memory, patterns,
 words) is woven into story-driven quests rather than presented as a quiz.
+(The brief scoped in Flame "where appropriate" — V1's screens turned out
+to be straightforward Flutter UI throughout, so it was never pulled in;
+see Phase 13's notes below.)
 
-Full design brief: see `docs/GAME_DESIGN_BRIEF.md`.
+Full design brief: see `docs/GAME_DESIGN_BRIEF.md`. Building an Android
+release from this repo: see `docs/RELEASE.md`.
 
-## Status: Phase 12 of 13 — Polish: animations + sound
+## Status: Phase 13 of 13 — Testing + Android release build (V1 complete)
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -287,7 +291,49 @@ Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
   integration checks that a real wrong answer visibly shakes the
   screen in the quest flow, Math Dash, and the parent gate
 
-Not built yet: the Android release build (Phase 13).
+**Phase 13** — Testing + Android release build (final phase; V1 content-complete):
+- **Cleanup audit, since "final testing" is the right time to catch
+  drift**: removed the `flame` dependency (declared since Phase 1,
+  never actually imported anywhere — V1's screens never needed it) and
+  a dead `PlaceholderScreen` widget (built in Phase 1 for routes ahead
+  of their phase; every route has a real screen now, so nothing
+  referenced it any more). Corrected `docs/PHASE_PLAN.md`'s V1-scope
+  note, which had drifted to claim Space Mission content existed — it
+  never did; only Jungle Adventure shipped. Explicitly resolved (as "not
+  built, not silently dropped") the long-open Quick Challenge mini-game
+  gap that never got a phase across 1–13
+- Closed two real test-coverage gaps found by auditing every `lib/`
+  file against `test/`: `RoomRepository` was missing the
+  corrupted-save-data test every other JSON-backed repository already
+  had, and `SharedPreferencesStorageService` — the actual production
+  storage backend — had zero direct test coverage of its own; every
+  other test exercises the hand-written `FakeLocalStorageService`
+  stand-in instead. Both fixed
+- Version bumped to `1.0.0+1` — this is the first release-candidate
+  version number
+- **`docs/RELEASE.md`**: a step-by-step runbook for turning this repo
+  into a signed Android release — `flutter create`, app identity,
+  icon, keystore/signing, the build commands, and a Play Store
+  submission checklist (data safety, permissions, content rating).
+  Written plainly as a runbook for **you** to execute with a real
+  Flutter/Android toolchain, not as a claim that a build has happened —
+  see the honest-limits note below
+- **The unavoidable honest limit, repeated one final time because this
+  is the phase named "testing" and "release build"**: no Flutter SDK
+  has been available at any point across all 13 phases. Every line of
+  Dart in this repo — all 76 `lib/` files and 45 `test/` files — has
+  been written and reviewed, but never compiled, analyzed, or run.
+  `flutter analyze` and `flutter test` have never actually executed
+  against this code. This isn't a gap specific to Phase 13; it's been
+  disclosed at the end of every phase, and it means step 2 of
+  `docs/RELEASE.md` ("verify the app actually works first") is not a
+  formality — it is the first real compile this code will ever see,
+  and the most important thing to do before building, signing, or
+  submitting anything
+
+V1 is content-complete across all 13 planned phases. What's genuinely
+left is what only a real toolchain can do: compiling it, running the
+45-file test suite, and building/signing an actual release artifact.
 
 ## First-time setup
 
@@ -417,8 +463,11 @@ iOS support is architected for but not built yet — see the brief).
 32. In Parent Zone, toggle **Sound Effects** and **Haptic Feedback**
     off. Go play — no more click/vibration on answers. Turn them back
     on and they resume immediately, no restart needed.
-33. `flutter test` passes (all widget + unit tests).
+33. `flutter test` passes (all widget + unit tests) — this is the
+    **first time** this exact command has ever run against this code;
+    see Phase 13's notes above.
 34. `flutter analyze` reports no errors.
+35. Ready to actually ship it? Follow `docs/RELEASE.md` end to end.
 
 ## Project structure
 
@@ -460,7 +509,7 @@ lib/
                               # ParentGateChallengeGenerator
     quests/                  # JungleQuests content (10 quests, data only)
   shared/
-    widgets/                 # BigRoundedButton, ShakeWidget, PopIn, PlaceholderScreen, ...
+    widgets/                 # BigRoundedButton, ShakeWidget, PopIn, ...
 test/
   game/                     # unit tests for repositories + models
   core/                     # DurationFormatter, PlayTimeTracker, FeedbackService

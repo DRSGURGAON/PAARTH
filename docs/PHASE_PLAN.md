@@ -15,13 +15,29 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 10** — Parent Zone
 - [x] **Phase 11** — Save system + offline persistence
 - [x] **Phase 12** — Polish: animations + sound
-- [ ] **Phase 13** — Testing + Android release build
+- [x] **Phase 13** — Testing + Android release build
 
-V1 scope: Jungle Adventure (fully playable) + the start of Space Mission.
-Worlds 3–5 (Dino Island, Magic Kingdom, Robot City) are designed in the
-brief but intentionally not built in V1 — the architecture must allow
-adding them later without rewriting existing code.
+V1 scope, as actually shipped: **Jungle Adventure only**, fully playable
+(5 locations, 10 quests, all 5 mini-games, rewards, companions, room
+customization, Parent Zone, save/reset, and the animation+sound polish
+of Phase 12). Worlds 2–5 (Space Mission, Dino Island, Magic Kingdom,
+Robot City) are designed in the brief but intentionally not built —
+`game/worlds/jungle_world.dart` establishes the pattern a `space_world.dart`
+etc. would follow later without rewriting existing code, but no Space
+Mission content exists yet. (An earlier draft of this doc said V1
+included "the start of Space Mission" — that was aspirational and never
+actually built; corrected here in Phase 13.)
 
-**Open gap:** the brief's Quick Challenge mini-game type (20–30s
-tap/count/match/avoid activities; section 21 wants 10 of them) has no
-phase of its own here. Needs a decision on which phase absorbs it.
+**Resolved gap:** the brief's Quick Challenge mini-game type (20–30s
+tap/count/match/avoid activities; section 21 wants 10 of them) never got
+a phase of its own across Phases 1–13 and is not part of this V1 release.
+Flagging it here explicitly rather than leaving it silently dropped: a
+V2 could add it as its own phase, following the same
+model+generator+screen pattern as the 5 built mini-games.
+
+**Also resolved in Phase 13:** the `flame` package was declared as a
+dependency from Phase 1 onward ("Flame where appropriate") but no
+screen ever actually needed it — every V1 screen is plain Flutter UI.
+Removed from `pubspec.yaml` rather than kept as an unused dependency;
+a future phase that builds a scrolling/physics world can reintroduce it
+when there's real code to justify it.

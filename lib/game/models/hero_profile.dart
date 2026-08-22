@@ -2,7 +2,8 @@ import '../data/hero_customization_catalog.dart';
 
 /// The child's chosen hero appearance. Holds option *ids* only (never
 /// [Color]s or widgets) so it stays trivially JSON-serializable for
-/// local save/load (Phase 11) and, later, cloud sync.
+/// local save/load, and would stay just as simple if cloud sync were
+/// ever added later.
 class HeroProfile {
   const HeroProfile({
     required this.hairOptionId,

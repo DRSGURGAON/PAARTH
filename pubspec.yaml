@@ -2,7 +2,7 @@ name: super_kid_adventure
 description: "Super Kid Adventure — Play. Learn. Explore. Become a Super Kid!"
 publish_to: 'none'
 
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -13,12 +13,9 @@ dependencies:
 
   cupertino_icons: ^1.0.6
 
-  # Game engine — used for the adventure map, mini-games and animated scenes.
-  flame: ^1.18.0
-
-  # Offline-first local persistence for game progress (Phase 11).
-  # Wrapped behind core/storage/local_storage_service.dart so the backing
-  # store can be swapped later without touching game code.
+  # Offline-first local persistence for game progress. Wrapped behind
+  # core/storage/local_storage_service.dart so the backing store can be
+  # swapped later without touching game code.
   shared_preferences: ^2.2.3
 
 dev_dependencies:
