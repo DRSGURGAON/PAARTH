@@ -425,6 +425,46 @@ plumbing keep working):
 - Same honest limit: no Flutter SDK available here — not compiled,
   analyzed, or run; Phase 13's note still applies in full
 
+**Phase 4 redesign** — Math Dash was likewise deepened against a more
+detailed brief ("Solve it. Collect it. Keep moving!"), reworking the
+existing mini-game rather than replacing it:
+- **`MathQuestion` model** (id, type, operands, correctAnswer, options,
+  level, visual/object): the generator now returns questions carrying
+  their own arithmetic facts, so the hint system and tests reason about
+  the math directly instead of re-parsing prompt strings
+- **Visual object system** (`MathObjects`): banana/apple/star/
+  strawberry/coin, each defined once — small quantities render as
+  countable object groups, never bare digits. Emoji remain the honest
+  stand-in for real vector art (none exists in this repo yet)
+- **Reusable hint system** (`MathHintService`, pure and unit-tested):
+  a wrong answer now gets a real teaching hint — count hints for
+  addition/comparison, step hints for subtraction (8 − 3 → "Count
+  down: 8 → 7 → 6 → 5") and sequences — never just the answer
+- **Sessions are 5 questions** with a top HUD (⭐ score, 🔥 streak,
+  N / 5 progress), the hero on screen, and a jungle-gradient backdrop.
+  The **streak counter** appears from 2-in-a-row; a miss resets it and
+  nothing else. No timers anywhere
+- **Rewards moved into the central reward service**
+  (`QuestRewardService.calculateMathDash`): star at ~80% first-try
+  correct (4 of 5), 5 coins with it, plus small streak bonuses (+1 for
+  a 3-streak, +3 for a perfect streak). The screen only reports
+  performance and pays what the service decides
+- **Quest integration without coupling**: a new `MathDashChallenge`
+  quest-challenge type lets any quest embed a short Math Dash session;
+  the session pops a `MathDashResult` back and the Quest Engine counts
+  a completed session as a solved challenge (the quest's own reward
+  pays — embedded sessions never double-pay). Repair the Jungle
+  Bridge's first challenge now embeds a 3-question banana-themed run
+- Adaptive difficulty unchanged and still shared (`DifficultyTracker`);
+  Robot's cross-out-an-option companion help unchanged
+- Tests: generator rework (operand/answer consistency per type, unique
+  ids, level bounds, visual objects), hint service (all four styles),
+  reward tiers and thresholds, streak display/reset, embedded-session
+  pop-with-result and no-double-pay, and the full-flow widget test now
+  plays the real embedded Math Dash inside the bridge quest
+- Same honest limit: no Flutter SDK available here — not compiled,
+  analyzed, or run; Phase 13's note still applies in full
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -473,16 +513,17 @@ iOS support is architected for but not built yet — see the brief).
    shake), and never rely on color alone to say so.
 6. Play **Repair the Jungle Bridge**: Momo the Monkey tells the story
    in short dialogue lines (Next to advance, Skip to jump ahead), then
-   **Start Adventure** → 3 challenges: banana math, a remember-the-
-   jungle-friends memory round (study as long as you like, then "I'm
-   ready!"), and a magical-lock pattern. A wrong answer shows
-   encouragement ("Almost! Let's try again!") plus a gentle 💡 hint and
-   lets you retry; each solved challenge awards a story item (Bridge
-   Piece #1, Repair Tool, Bridge Piece #2). Then the bridge-repair
-   story plays out beat by beat — pieces attach, the bridge fixes, the
-   baby monkey crosses — before the celebration screen. A perfect
-   no-miss run pays **+3 ⭐ +50 🪙**; a run with retries still pays
-   **+2 ⭐ +35 🪙** (retrying is never punished).
+   **Start Adventure** → 3 challenges: an embedded 3-question **Math
+   Dash** session ("The monkey needs bananas for the jungle camp!" →
+   Play Math Dash!), a remember-the-jungle-friends memory round (study
+   as long as you like, then "I'm ready!"), and a magical-lock pattern.
+   A wrong answer shows encouragement ("Almost! Let's try again!") plus
+   a gentle 💡 hint and lets you retry; each solved challenge awards a
+   story item (Bridge Piece #1, Repair Tool, Bridge Piece #2). Then the
+   bridge-repair story plays out beat by beat — pieces attach, the
+   bridge fixes, the baby monkey crosses — before the celebration
+   screen. A no-quest-level-miss run pays **+3 ⭐ +50 🪙**; a run with
+   retries still pays **+2 ⭐ +35 🪙** (retrying is never punished).
 7. Back on the map, your stars now count toward unlocks: **Waterfall**
    opens at 6 ⭐, **Lion Cave** at 10 ⭐, **Mountain** at 14 ⭐ (real and
    locked, but its own quests aren't authored yet — opening it early
@@ -496,11 +537,18 @@ iOS support is architected for but not built yet — see the brief).
    button, or kill the app) and the quest list shows "Keep going —
    you're mid-adventure!"; reopening resumes at the start of the
    challenge you were on, misses remembered.
-9. From **Home**, tap **Mini-Games** → **Math Dash**: the intro states
-   the reward rule ("Get 6 right on the first try to earn a ⭐"), then
-   8 puzzles — small counts appear as countable emoji. Answer 3 in a
-   row correctly across rounds and the questions quietly get harder;
-   struggle and they ease off.
+9. From **Home**, tap **Mini-Games** → **Math Dash** ("Solve it.
+   Collect it. Keep moving!"): the intro states the reward rule ("Get 4
+   right on the first try to earn a ⭐"), then a 5-question session
+   with your hero on screen — small counts appear as countable objects
+   (bananas, apples, stars, strawberries, coins). The top HUD shows ⭐
+   score, 🔥 streak (from 2 in a row), and progress N / 5. A miss shows
+   encouragement plus a 💡 hint (subtraction counts down step by step:
+   8 → 7 → 6 → 5) and resets the streak — nothing earned is ever
+   removed. Results show score, best streak, and the payout (perfect
+   streak earns bonus coins). Answer 3 in a row correctly across
+   sessions and the questions quietly get harder; struggle and they
+   ease off.
 10. Back at Mini-Games, try **Memory Master**: watch the emoji shown,
     they disappear, then answer a question about them (position/order/
     what you saw/how many). 4 of 5 first-try correct earns a ⭐.

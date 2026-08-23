@@ -31,4 +31,55 @@ void main() {
       expect(reward.coins, greaterThan(0));
     });
   });
+
+  group('QuestRewardService.calculateMathDash', () {
+    test('the star threshold is ~80% of the session, rounded up', () {
+      expect(QuestRewardService.mathDashStarThreshold(5), 4);
+      expect(QuestRewardService.mathDashStarThreshold(3), 3);
+    });
+
+    test('a perfect session pays the star plus the perfect-streak bonus', () {
+      final reward = QuestRewardService.calculateMathDash(
+          correctAnswers: 5, totalQuestions: 5, bestStreak: 5);
+
+      expect(reward.stars, 1);
+      expect(
+          reward.coins,
+          QuestRewardService.mathDashCoins +
+              QuestRewardService.perfectStreakBonusCoins);
+    });
+
+    test('reaching the threshold with a mid streak pays star + small bonus',
+        () {
+      final reward = QuestRewardService.calculateMathDash(
+          correctAnswers: 4, totalQuestions: 5, bestStreak: 3);
+
+      expect(reward.stars, 1);
+      expect(
+          reward.coins,
+          QuestRewardService.mathDashCoins +
+              QuestRewardService.streakBonusCoins);
+    });
+
+    test('below the threshold: no star, and a streak still earns a little',
+        () {
+      final noStreak = QuestRewardService.calculateMathDash(
+          correctAnswers: 3, totalQuestions: 5, bestStreak: 2);
+      final withStreak = QuestRewardService.calculateMathDash(
+          correctAnswers: 3, totalQuestions: 5, bestStreak: 3);
+
+      expect(noStreak.stars, 0);
+      expect(noStreak.coins, 0);
+      expect(withStreak.stars, 0);
+      expect(withStreak.coins, QuestRewardService.streakBonusCoins);
+    });
+
+    test('nothing is ever negative, even with zero correct', () {
+      final reward = QuestRewardService.calculateMathDash(
+          correctAnswers: 0, totalQuestions: 5, bestStreak: 0);
+
+      expect(reward.stars, 0);
+      expect(reward.coins, 0);
+    });
+  });
 }

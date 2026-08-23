@@ -51,6 +51,13 @@ void main() {
         expect(quest.starReward, greaterThan(0));
 
         for (final challenge in quest.challenges) {
+          expect(challenge.prompt, isNotEmpty);
+          if (challenge is MathDashChallenge) {
+            // Its questions are generated at play time; the fixed
+            // options are engine bookkeeping, not child-facing.
+            expect(challenge.questionCount, greaterThan(0));
+            continue;
+          }
           expect(challenge.options.length, greaterThanOrEqualTo(2),
               reason: 'A challenge in ${quest.id} has too few options');
           expect(
@@ -59,27 +66,29 @@ void main() {
             reason: 'A challenge in ${quest.id} has an out-of-range '
                 'correctIndex',
           );
-          expect(challenge.prompt, isNotEmpty);
         }
       }
     });
 
-    test('the first quest tells its full story: NPC, dialogue, a memory '
-        'challenge, and a bridge-repair resolution', () {
+    test('the first quest tells its full story: NPC, dialogue, an embedded '
+        'Math Dash, a memory challenge, and a bridge-repair resolution', () {
       final quest =
           JungleQuests.all.firstWhere((q) => q.id == 'jungle_bridge_repair');
 
       expect(quest.npc, isNotNull);
       expect(quest.introDialogue.length, greaterThanOrEqualTo(3));
       expect(quest.resolutionSteps.length, greaterThanOrEqualTo(3));
-      expect(quest.challenges.whereType<MemoryChallenge>(), hasLength(1));
-      // Spec'd challenge order: math → memory → pattern.
-      expect(quest.challenges[0].category, ChallengeCategory.math);
-      expect(quest.challenges[1].category, ChallengeCategory.memory);
+      // Spec'd challenge order: Math Dash → memory → pattern.
+      expect(quest.challenges[0], isA<MathDashChallenge>());
+      expect(quest.challenges[1], isA<MemoryChallenge>());
       expect(quest.challenges[2].category, ChallengeCategory.logic);
       for (final challenge in quest.challenges) {
-        expect(challenge.hint, isNotNull);
         expect(challenge.rewardLabel, isNotNull);
+        // Fixed-answer challenges carry an authored hint; the Math Dash
+        // session generates its own hints per question.
+        if (challenge is! MathDashChallenge) {
+          expect(challenge.hint, isNotNull);
+        }
       }
     });
 

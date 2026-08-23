@@ -42,14 +42,10 @@ class JungleQuests {
       ],
       starReward: 2,
       challenges: [
-        ChoiceChallenge(
-          category: ChallengeCategory.math,
-          prompt: 'The monkey needs 8 bananas. Then he gives 3 to his '
-              'friend. How many bananas are left?',
-          visual: '🍌🍌🍌🍌🍌🍌🍌🍌',
-          options: ['4', '5', '6'],
-          correctIndex: 1,
-          hint: 'Count all 8 bananas, then take 3 away!',
+        MathDashChallenge(
+          prompt: 'The monkey needs bananas for the jungle camp! '
+              'Solve the number puzzles to earn the first bridge piece.',
+          questionCount: 3,
           rewardLabel: 'Bridge Piece #1',
         ),
         MemoryChallenge(

@@ -67,6 +67,30 @@ class ChoiceChallenge extends QuestChallenge {
   final String? visual;
 }
 
+/// A quest challenge that embeds a short Math Dash session (Phase 4):
+/// the quest screen shows [prompt] as the story framing plus a big
+/// "Play Math Dash!" button, runs [questionCount] generated questions,
+/// and reports completion back to the quest engine. Deliberately not
+/// tied to any particular quest — any future quest can drop one of
+/// these into its challenge list. The single '✓' option exists only so
+/// the engine's answer bookkeeping treats a finished session as a
+/// solved challenge; it is never shown to the child.
+class MathDashChallenge extends QuestChallenge {
+  const MathDashChallenge({
+    required super.prompt,
+    this.questionCount = 3,
+    super.rewardLabel,
+  }) : super(
+          category: ChallengeCategory.math,
+          options: const ['✓'],
+          correctIndex: 0,
+        );
+
+  /// Session length for this embedded run — shorter than a standalone
+  /// session so the quest keeps its pace.
+  final int questionCount;
+}
+
 /// A short remember-then-answer challenge: [itemsToRemember] is shown
 /// big, the child taps "I'm ready!", the items hide, and the options
 /// appear. Kept deliberately gentle for a 7-year-old — the child

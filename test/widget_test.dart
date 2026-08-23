@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/app.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
+import 'package:super_kid_adventure/features/mini_games/math_dash_screen.dart';
 import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
 import 'package:super_kid_adventure/game/systems/quest_reward_service.dart';
@@ -94,20 +95,36 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('dialogue_skip')));
     await tester.pumpAndSettle();
 
-    // Play it through, answering every challenge correctly. The memory
-    // challenge shows its study phase first.
+    // Play it through, answering every challenge correctly. The first
+    // challenge embeds a real Math Dash session; the memory challenge
+    // shows its study phase first.
     await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
     for (var i = 0; i < quest.challenges.length; i++) {
       final challenge = quest.challenges[i];
-      if (challenge is MemoryChallenge) {
-        expect(find.text(challenge.itemsToRemember), findsOneWidget);
-        await tester.tap(find.byKey(const ValueKey('memory_ready')));
+      if (challenge is MathDashChallenge) {
+        await tester.tap(find.byKey(const ValueKey('play_math_dash')));
+        await tester.pumpAndSettle();
+        for (var q = 0; q < challenge.questionCount; q++) {
+          // Questions are generated — read the live state for the
+          // correct option, same as math_dash_test does.
+          final dashState = tester
+              .state<MathDashScreenState>(find.byType(MathDashScreen));
+          final correctIndex = dashState.currentQuestion.correctIndex;
+          await tester.tap(find.byKey(ValueKey('option_$correctIndex')));
+          await tester.pumpAndSettle();
+        }
+        // The finished session popped back into the quest.
+      } else {
+        if (challenge is MemoryChallenge) {
+          expect(find.text(challenge.itemsToRemember), findsOneWidget);
+          await tester.tap(find.byKey(const ValueKey('memory_ready')));
+          await tester.pumpAndSettle();
+        }
+        await tester
+            .tap(find.byKey(ValueKey('option_${challenge.correctIndex}')));
         await tester.pumpAndSettle();
       }
-      await tester
-          .tap(find.byKey(ValueKey('option_${challenge.correctIndex}')));
-      await tester.pumpAndSettle();
       // Story-item reward dialog after every solved challenge.
       expect(find.textContaining(challenge.rewardLabel!), findsOneWidget);
       await tester.tap(find.text('Next!'));
@@ -155,10 +172,28 @@ void main() {
     await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
 
-    final challenge = JungleQuests.all
-        .firstWhere((q) => q.id == 'jungle_bridge_repair')
-        .challenges
-        .first;
+    // The bridge quest's first challenge is now an embedded Math Dash —
+    // wrong answers inside it get their own gentle handling (covered in
+    // math_dash_test), so exercise the quest-level retry flow on the
+    // memory challenge instead: play through the dash first.
+    final quest = JungleQuests.all
+        .firstWhere((q) => q.id == 'jungle_bridge_repair');
+    final dash = quest.challenges.first as MathDashChallenge;
+    await tester.tap(find.byKey(const ValueKey('play_math_dash')));
+    await tester.pumpAndSettle();
+    for (var q = 0; q < dash.questionCount; q++) {
+      final dashState =
+          tester.state<MathDashScreenState>(find.byType(MathDashScreen));
+      final correctIndex = dashState.currentQuestion.correctIndex;
+      await tester.tap(find.byKey(ValueKey('option_$correctIndex')));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.text('Next!'));
+    await tester.pumpAndSettle();
+
+    final challenge = quest.challenges[1] as MemoryChallenge;
+    await tester.tap(find.byKey(const ValueKey('memory_ready')));
+    await tester.pumpAndSettle();
     final wrongIndex =
         (challenge.correctIndex + 1) % challenge.options.length;
 
