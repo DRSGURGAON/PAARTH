@@ -4,6 +4,7 @@ import 'package:super_kid_adventure/app.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/features/mini_games/math_dash_screen.dart';
 import 'package:super_kid_adventure/features/mini_games/memory_master_screen.dart';
+import 'package:super_kid_adventure/features/mini_games/pattern_power_screen.dart';
 import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
 import 'package:super_kid_adventure/game/systems/quest_reward_service.dart';
@@ -125,6 +126,16 @@ void main() {
               const Duration(milliseconds: 50));
           await tester.pumpAndSettle();
           final correctIndex = memState.currentRound.question.correctIndex;
+          await tester.tap(find.byKey(ValueKey('option_$correctIndex')));
+          await tester.pumpAndSettle();
+        }
+      } else if (challenge is PatternPowerChallenge) {
+        await tester.tap(find.byKey(const ValueKey('play_pattern_power')));
+        await tester.pumpAndSettle();
+        for (var q = 0; q < challenge.questionCount; q++) {
+          final patternState = tester.state<PatternPowerScreenState>(
+              find.byType(PatternPowerScreen));
+          final correctIndex = patternState.currentQuestion.correctIndex;
           await tester.tap(find.byKey(ValueKey('option_$correctIndex')));
           await tester.pumpAndSettle();
         }

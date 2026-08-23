@@ -109,6 +109,23 @@ class MemoryMasterChallenge extends QuestChallenge {
   final int questionCount;
 }
 
+/// A quest challenge that embeds a short Pattern Power session
+/// (Phase 6), same contract as [MathDashChallenge] and
+/// [MemoryMasterChallenge]. Reusable by any quest.
+class PatternPowerChallenge extends QuestChallenge {
+  const PatternPowerChallenge({
+    required super.prompt,
+    this.questionCount = 3,
+    super.rewardLabel,
+  }) : super(
+          category: ChallengeCategory.logic,
+          options: const ['✓'],
+          correctIndex: 0,
+        );
+
+  final int questionCount;
+}
+
 /// A short authored remember-then-answer challenge: [itemsToRemember]
 /// is shown big, the child taps "I'm ready!", the items hide, and the
 /// options appear. Kept deliberately gentle for a 7-year-old — the

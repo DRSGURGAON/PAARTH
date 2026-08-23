@@ -63,6 +63,10 @@ void main() {
             expect(challenge.questionCount, greaterThan(0));
             continue;
           }
+          if (challenge is PatternPowerChallenge) {
+            expect(challenge.questionCount, greaterThan(0));
+            continue;
+          }
           expect(challenge.options.length, greaterThanOrEqualTo(2),
               reason: 'A challenge in ${quest.id} has too few options');
           expect(
@@ -75,26 +79,21 @@ void main() {
       }
     });
 
-    test('the first quest tells its full story: NPC, dialogue, embedded '
-        'Math Dash and Memory Master, and a bridge-repair resolution', () {
+    test('the first quest tells its full story: NPC, dialogue, all three '
+        'embedded mini-games, and a bridge-repair resolution', () {
       final quest =
           JungleQuests.all.firstWhere((q) => q.id == 'jungle_bridge_repair');
 
       expect(quest.npc, isNotNull);
       expect(quest.introDialogue.length, greaterThanOrEqualTo(3));
       expect(quest.resolutionSteps.length, greaterThanOrEqualTo(3));
-      // Spec'd challenge order: Math Dash → Memory Master → pattern.
+      // Spec'd challenge order: Math Dash → Memory Master → Pattern
+      // Power.
       expect(quest.challenges[0], isA<MathDashChallenge>());
       expect(quest.challenges[1], isA<MemoryMasterChallenge>());
-      expect(quest.challenges[2].category, ChallengeCategory.logic);
+      expect(quest.challenges[2], isA<PatternPowerChallenge>());
       for (final challenge in quest.challenges) {
         expect(challenge.rewardLabel, isNotNull);
-        // Fixed-answer challenges carry an authored hint; embedded
-        // mini-game sessions generate their own hints per question.
-        if (challenge is! MathDashChallenge &&
-            challenge is! MemoryMasterChallenge) {
-          expect(challenge.hint, isNotNull);
-        }
       }
     });
 

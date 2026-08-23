@@ -508,6 +508,48 @@ existing mini-game rather than replacing it:
 - Same honest limit: no Flutter SDK available here — not compiled,
   analyzed, or run; Phase 13's note still applies in full
 
+**Phase 6 redesign** — Pattern Power was likewise deepened against a
+more detailed brief ("Spot the pattern. Unlock the adventure!"),
+reworking the existing mini-game rather than replacing it:
+- **`PatternQuestion` model + themed content** (`PatternItems`):
+  colors, shapes, animals, and objects (the brief's exact item lists),
+  each pattern drawn from one coherent category — a color pattern, an
+  animal pattern — instead of a mixed emoji soup. Items carry labels
+  so a color pattern is never *only* a color. Patterns are built
+  combinatorially from the item data — dozens per category with no
+  hand-authored widgets
+- **Structure ladder per the brief**: AB at level 1, ABC from level 2,
+  AABB from level 3, gentle number sequences (steps 1/2, then 5/10)
+  from level 4 — bounded by the shared adaptive `DifficultyTracker`,
+  never a sudden jump. Sessions mix categories freely while structure
+  complexity stays within the child's level
+- **Pattern-specific hints** (`PatternHintService`, pure and
+  unit-tested): a miss re-draws the row with the repeating groups
+  marked (🟢 🔵 | 🟢 🔵 | ❓) and says what repeats; number patterns
+  name the jump. Teaches *how* to spot the pattern, never the answer
+- **The jungle lock**: the pattern sits inside a lock card (🔒);
+  every solve pops a 🔓 "Pattern unlocked!" chip, and the results
+  screen opens the lock for the session — the educational answer
+  visibly affects the adventure
+- **Sessions are 5 patterns** with the shared HUD (⭐ score, 🧩 streak
+  from 2-in-a-row, N / 5), jungle backdrop, no timers; Fox's
+  cross-out-an-option companion help unchanged
+- **Rewards and results through the shared services**
+  (`calculateMiniGameSession` / `MiniGameSessionResult`) — no
+  duplicated streak or payout logic
+- **Quest integration**: new `PatternPowerChallenge` embeds a session
+  in any quest; Repair the Jungle Bridge's third challenge is now a
+  real 3-pattern embedded session, completing the brief's flow —
+  Math Dash → Memory Master → Pattern Power → bridge repair
+- Tests: generator rework (per-structure shape checks, category
+  coherence, level-bounded structures, gentle number steps, unique
+  ids/options), hint dividers and no-answer-leak, lock-reaction chip,
+  streak chip, embedded pop-with-result and no-double-pay, and the
+  full-flow widget test now plays all three embedded sessions inside
+  the bridge quest
+- Same honest limit: no Flutter SDK available here — not compiled,
+  analyzed, or run; Phase 13's note still applies in full
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -556,11 +598,12 @@ iOS support is architected for but not built yet — see the brief).
    shake), and never rely on color alone to say so.
 6. Play **Repair the Jungle Bridge**: Momo the Monkey tells the story
    in short dialogue lines (Next to advance, Skip to jump ahead), then
-   **Start Adventure** → 3 challenges: an embedded 3-question **Math
-   Dash** session ("The monkey needs bananas for the jungle camp!" →
-   Play Math Dash!), an embedded 3-round **Memory Master** session
-   ("The jungle friends are hiding!" → Play Memory Master!), and a
-   magical-lock pattern.
+   **Start Adventure** → 3 challenges, each an embedded real
+   mini-game session: a 3-question **Math Dash** ("The monkey needs
+   bananas for the jungle camp!" → Play Math Dash!), a 3-round
+   **Memory Master** ("The jungle friends are hiding!" → Play Memory
+   Master!), and a 3-pattern **Pattern Power** ("The bridge has a
+   magical lock!" → Play Pattern Power!).
    A wrong answer shows encouragement ("Almost! Let's try again!") plus
    a gentle 💡 hint and lets you retry; each solved challenge awards a
    story item (Bridge Piece #1, Repair Tool, Bridge Piece #2). Then the
@@ -601,8 +644,15 @@ iOS support is architected for but not built yet — see the brief).
     shows ⭐ score, 🧠 streak, and N / 5. A miss offers a once-per-round
     "Look again" peek at the scene. 4 of 5 first-try correct earns a ⭐
     (streak bonuses add coins, same payout rule as Math Dash).
-11. Try **Pattern Power**: a repeating emoji pattern with a "❓" at the
-    end — tap what comes next. 6 of 8 first-try correct earns a ⭐.
+11. Try **Pattern Power** ("Spot the pattern. Unlock the adventure!"):
+    the jungle lock shows a themed pattern — colors, shapes, animals,
+    objects, or (from higher levels) number sequences — with a ❓ at
+    the end; tap what comes next from three big choices. Structures
+    grow with your level (AB → ABC → AABB → numbers). Each solve pops
+    a 🔓 "Pattern unlocked!" chip; a miss shows a hint that re-draws
+    the row with the repeating groups marked (🟢 🔵 | 🟢 🔵 | ❓). HUD:
+    ⭐ score, 🧩 streak, N / 5. 4 of 5 first-try correct earns a ⭐
+    (same shared payout rule as the other mini-games).
 12. Try **Word Builder**: an emoji (e.g. 🐶) with scrambled letter
     tiles below — tap them in order to spell the word; tap a placed
     letter to undo it. 4 of 6 first-try correct earns a ⭐.

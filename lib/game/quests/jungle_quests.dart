@@ -54,13 +54,10 @@ class JungleQuests {
           questionCount: 3,
           rewardLabel: 'Repair Tool',
         ),
-        ChoiceChallenge(
-          category: ChallengeCategory.logic,
-          prompt: 'The bridge has a magical lock! What comes next?',
-          visual: '🟢 🔵 🟢 🔵 ❓',
-          options: ['🟢', '🔵', '🔴'],
-          correctIndex: 0,
-          hint: 'Say the colors out loud — green, blue, green, blue...',
+        PatternPowerChallenge(
+          prompt: 'The bridge has a magical lock! It only opens when you '
+              'discover its patterns.',
+          questionCount: 3,
           rewardLabel: 'Bridge Piece #2',
         ),
       ],

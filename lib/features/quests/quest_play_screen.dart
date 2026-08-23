@@ -15,6 +15,7 @@ import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/shake_widget.dart';
 import '../mini_games/math_dash_screen.dart';
 import '../mini_games/memory_master_screen.dart';
+import '../mini_games/pattern_power_screen.dart';
 import 'quest_complete_screen.dart';
 import 'quest_resolution_screen.dart';
 
@@ -213,6 +214,25 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
                   onPlay: () => _launchMiniGame(
                     challenge,
                     MemoryMasterScreen(
+                      embedded: true,
+                      sessionLength: challenge.questionCount,
+                    ),
+                  ),
+                )
+              : challenge is PatternPowerChallenge
+              ? _MiniGameLauncher(
+                  emoji: '🧩',
+                  prompt: challenge.prompt,
+                  buttonKey: const ValueKey('play_pattern_power'),
+                  buttonLabel: 'Play Pattern Power!',
+                  buttonIcon: Icons.pattern_rounded,
+                  progress: _ProgressDots(
+                    total: widget.quest.challenges.length,
+                    current: _engine.currentIndex,
+                  ),
+                  onPlay: () => _launchMiniGame(
+                    challenge,
+                    PatternPowerScreen(
                       embedded: true,
                       sessionLength: challenge.questionCount,
                     ),
