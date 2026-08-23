@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
@@ -48,7 +47,7 @@ class CompanionSelectScreenState extends State<CompanionSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final companions = CompanionCatalog.all;
+    const companions = CompanionCatalog.all;
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Companions')),
@@ -155,7 +154,7 @@ class _CompanionCard extends StatelessWidget {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.check_circle_rounded,
                           color: AppColors.leafGreen,
                           size: 22,

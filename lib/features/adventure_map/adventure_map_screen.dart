@@ -260,7 +260,7 @@ class _MapNode extends StatelessWidget {
                             boxShadow: !isLocked
                                 ? [
                                     BoxShadow(
-                                      color: circleColor.withOpacity(0.4),
+                                      color: circleColor.withValues(alpha: 0.4),
                                       blurRadius: 10,
                                       spreadRadius: 1,
                                     ),
@@ -370,7 +370,7 @@ class _HeroMarker extends StatelessWidget {
           border: Border.all(color: AppColors.coral, width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

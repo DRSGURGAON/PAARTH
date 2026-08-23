@@ -76,7 +76,7 @@ class _ComingSoon extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(location.icon, size: 72, color: AppColors.inkNavy.withOpacity(0.35)),
+            Icon(location.icon, size: 72, color: AppColors.inkNavy.withValues(alpha: 0.35)),
             const SizedBox(height: 16),
             Text(
               'More adventures are coming to ${location.name} soon!',

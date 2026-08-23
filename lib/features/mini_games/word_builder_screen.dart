@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/audio/feedback_service.dart';
@@ -24,8 +23,8 @@ import '../../shared/widgets/pop_in.dart';
 /// scrambled position) rather than relying on the letter value, so
 /// words with repeated letters (e.g. "EGG") behave correctly — tapping
 /// either "G" tile moves that specific tile, not "a G".
-class _LetterTile {
-  const _LetterTile(this.id, this.letter);
+class LetterTile {
+  const LetterTile(this.id, this.letter);
 
   final int id;
   final String letter;
@@ -63,8 +62,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
 
   _RoundPhase _phase = _RoundPhase.intro;
   late WordPuzzle _puzzle;
-  late List<_LetterTile> _pool;
-  late List<_LetterTile?> _placed;
+  late List<LetterTile> _pool;
+  late List<LetterTile?> _placed;
   int _roundNumber = 0;
   int _score = 0;
   bool _firstAttempt = true;
@@ -75,7 +74,7 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
   WordPuzzle get currentPuzzle => _puzzle;
 
   @visibleForTesting
-  List<_LetterTile> get pool => _pool;
+  List<LetterTile> get pool => _pool;
 
   @override
   void didChangeDependencies() {
@@ -107,8 +106,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
   void _startRound() {
     _puzzle = _generator.next(_tracker.levelFor(ChallengeCategory.english));
     final letters = _generator.scrambleLetters(_puzzle.word);
-    _pool = [for (var i = 0; i < letters.length; i++) _LetterTile(i, letters[i])];
-    _placed = List<_LetterTile?>.filled(_puzzle.word.length, null);
+    _pool = [for (var i = 0; i < letters.length; i++) LetterTile(i, letters[i])];
+    _placed = List<LetterTile?>.filled(_puzzle.word.length, null);
     _firstAttempt = true;
 
     // Puppy's hint: sniff out and place the word's first letter so the
@@ -126,7 +125,7 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
   @visibleForTesting
   String? get puppyPlacedLetter => _placed.isNotEmpty ? _placed[0]?.letter : null;
 
-  void _tapPoolTile(_LetterTile tile) {
+  void _tapPoolTile(LetterTile tile) {
     final emptySlot = _placed.indexOf(null);
     if (emptySlot == -1) return;
     setState(() {
@@ -163,8 +162,8 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
         _feedback = QuestEngine
             .encouragements[_roundNumber % QuestEngine.encouragements.length];
         // Give the letters back so the child can try again.
-        _pool = [..._pool, ..._placed.whereType<_LetterTile>()];
-        _placed = List<_LetterTile?>.filled(_puzzle.word.length, null);
+        _pool = [..._pool, ..._placed.whereType<LetterTile>()];
+        _placed = List<LetterTile?>.filled(_puzzle.word.length, null);
       });
       return;
     }

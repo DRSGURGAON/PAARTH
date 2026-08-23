@@ -103,7 +103,7 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets("Monkey points at one real target in every scene",
+  testWidgets('Monkey points at one real target in every scene',
       (tester) async {
     await tester.pumpWidget(await buildHarness(monkeyEquipped: true));
     await tester.tap(find.text("Let's Go!"));

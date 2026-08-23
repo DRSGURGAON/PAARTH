@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
@@ -139,7 +138,7 @@ class RoomScreenState extends State<RoomScreen> {
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
-                                ?.copyWith(color: AppColors.inkNavy.withOpacity(0.6)),
+                                ?.copyWith(color: AppColors.inkNavy.withValues(alpha: 0.6)),
                           ),
                         ],
                       ),
@@ -211,7 +210,7 @@ class _RoomSlotTile extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: item == null ? Colors.white : item!.color.withOpacity(0.25),
+          color: item == null ? Colors.white : item!.color.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: item == null ? Colors.grey.shade300 : item!.color,

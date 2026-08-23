@@ -250,7 +250,7 @@ class _Swatch extends StatelessWidget {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: option.color.withOpacity(0.5),
+                          color: option.color.withValues(alpha: 0.5),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -340,7 +340,7 @@ class _AccessorySwatch extends StatelessWidget {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.inkNavy.withOpacity(0.25),
+                      color: AppColors.inkNavy.withValues(alpha: 0.25),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),

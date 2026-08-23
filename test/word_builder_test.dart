@@ -95,7 +95,7 @@ void main() {
     await tester.pump();
 
     final word = stateOf(tester).currentPuzzle.word;
-    if (word.length < 2 || word.toSet().length < 2) {
+    if (word.length < 2 || word.split('').toSet().length < 2) {
       // Extremely unlikely with this seed, but skip defensively if the
       // chosen word can't be meaningfully misordered.
       return;

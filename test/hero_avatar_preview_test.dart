@@ -4,6 +4,7 @@ import 'package:super_kid_adventure/features/player/hero_avatar_preview.dart';
 import 'package:super_kid_adventure/game/data/hero_customization_catalog.dart';
 import 'package:super_kid_adventure/game/data/shop_catalog.dart';
 import 'package:super_kid_adventure/game/models/hero_profile.dart';
+import 'package:super_kid_adventure/game/models/shop_item.dart';
 
 void main() {
   testWidgets('a hero profile with a chosen skin tone renders that '

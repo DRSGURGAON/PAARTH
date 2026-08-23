@@ -62,8 +62,8 @@ void main() {
     });
 
     test('each mini-game badge tracks its own game id only', () {
-      final stats = BadgeStats(
-        completedQuestIds: const {},
+      const stats = BadgeStats(
+        completedQuestIds: {},
         miniGameStarIds: {MiniGameIds.mathDash},
         totalStars: 0,
         totalCoins: 0,

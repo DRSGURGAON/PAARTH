@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/audio/feedback_service.dart';
@@ -219,7 +218,7 @@ class FindDiscoverScreenState extends State<FindDiscoverScreen> {
                     color: isShaking
                         ? const Color(0xFFFFD3CE)
                         : isFound
-                            ? AppColors.leafGreen.withOpacity(0.25)
+                            ? AppColors.leafGreen.withValues(alpha: 0.25)
                             : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: isHinted

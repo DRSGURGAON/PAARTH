@@ -106,7 +106,7 @@ void main() {
         findsOneWidget);
   });
 
-  testWidgets("Panda gives 1.5x study time and is announced during study",
+  testWidgets('Panda gives 1.5x study time and is announced during study',
       (tester) async {
     await tester.pumpWidget(await buildHarness(pandaEquipped: true));
     await tester.tap(find.text("Let's Go!"));

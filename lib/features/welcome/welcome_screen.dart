@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-              _Mascot(),
+              const _Mascot(),
               const SizedBox(height: 32),
               Text(
                 AppConstants.appName,
@@ -41,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
                 AppConstants.appTagline,
                 textAlign: TextAlign.center,
                 style: textTheme.bodyLarge?.copyWith(
-                  color: AppColors.inkNavy.withOpacity(0.7),
+                  color: AppColors.inkNavy.withValues(alpha: 0.7),
                 ),
               ),
               const Spacer(flex: 2),

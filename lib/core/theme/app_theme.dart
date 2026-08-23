@@ -15,7 +15,7 @@ class AppTheme {
   static const double _buttonMinHeight = 64.0;
 
   static ThemeData get light {
-    final colorScheme = const ColorScheme.light(
+    const colorScheme = ColorScheme.light(
       primary: AppColors.skyBlue,
       onPrimary: Colors.white,
       secondary: AppColors.coral,
