@@ -1,12 +1,14 @@
 import '../models/quest.dart';
 
 /// All Jungle Adventure quest content — data only, no UI. Two quests per
-/// location, 3 challenges each, aimed at Class 2 / age ~7 (addition and
-/// subtraction within 20, simple patterns and sequences, picture words).
+/// location (Mountain excepted — see JungleWorld), 3 challenges each,
+/// aimed at Class 2 / age ~7 (addition and subtraction within 20,
+/// simple patterns and sequences, picture words).
 ///
-/// Star economy: each quest awards 2 stars, so completing a location's
-/// two quests (+4) always covers the next location's unlock threshold
-/// (+3 each step) — verified by `jungle_quests_test.dart`.
+/// Star economy: each quest's base reward is 2 stars (a perfect run
+/// earns a bonus — see QuestRewardService), and every location's
+/// threshold is coverable from base rewards alone — verified by
+/// `jungle_quests_test.dart`.
 class JungleQuests {
   JungleQuests._();
 
@@ -19,36 +21,54 @@ class JungleQuests {
       id: 'jungle_bridge_repair',
       locationId: 'tree_house',
       title: 'Repair the Jungle Bridge',
+      npc: QuestNpc(name: 'Momo the Monkey', emoji: '🐒'),
       storyIntro: 'Oh no! The jungle bridge is broken and a baby monkey is '
-          'stuck on the other side. Collect 3 bridge pieces to fix it!',
-      storyOutro: 'You fixed the bridge! The baby monkey runs across and '
-          'gives you a big hug. Hooray!',
+          'stuck on the other side. Collect the parts to fix it!',
+      introDialogue: [
+        'Uh-oh!',
+        'The jungle bridge is broken!',
+        'A little animal is stuck on the other side.',
+        'Can you help repair the bridge, Super Kid?',
+      ],
+      storyOutro: 'You repaired the jungle bridge! The baby monkey runs '
+          'across and gives you a big hug. Hooray!',
+      resolutionSteps: [
+        '🦸 You arrive at the broken bridge...',
+        '🧩 Your bridge pieces float into place!',
+        '🔧 The repair tool tightens everything up!',
+        '🌉 The bridge is fixed!',
+        '🐒 The baby monkey scampers across safely!',
+        '🎊 The whole jungle cheers for you, Super Kid!',
+      ],
       starReward: 2,
       challenges: [
         ChoiceChallenge(
           category: ChallengeCategory.math,
-          prompt: 'There are 8 bananas. The monkey eats 3. '
-              'How many are left?',
+          prompt: 'The monkey needs 8 bananas. Then he gives 3 to his '
+              'friend. How many bananas are left?',
           visual: '🍌🍌🍌🍌🍌🍌🍌🍌',
           options: ['4', '5', '6'],
           correctIndex: 1,
-          rewardLabel: 'Bridge Piece 1',
+          hint: 'Count all 8 bananas, then take 3 away!',
+          rewardLabel: 'Bridge Piece #1',
+        ),
+        MemoryChallenge(
+          studyPrompt: 'Remember these jungle friends!',
+          itemsToRemember: '🐒 🐼 🦊 🐰',
+          prompt: 'Which animals did you see?',
+          options: ['🐒 🐼 🦊 🐰', '🐒 🐼 🦁 🐰', '🐒 🦊 🐸 🐰'],
+          correctIndex: 0,
+          hint: 'One row has exactly the friends you met!',
+          rewardLabel: 'Repair Tool',
         ),
         ChoiceChallenge(
           category: ChallengeCategory.logic,
-          prompt: 'What comes next?',
+          prompt: 'The bridge has a magical lock! What comes next?',
           visual: '🟢 🔵 🟢 🔵 ❓',
           options: ['🟢', '🔵', '🔴'],
           correctIndex: 0,
-          rewardLabel: 'Bridge Piece 2',
-        ),
-        ChoiceChallenge(
-          category: ChallengeCategory.math,
-          prompt: 'Count the wooden planks!',
-          visual: '🪵🪵🪵 🪵🪵🪵',
-          options: ['5', '6', '7'],
-          correctIndex: 1,
-          rewardLabel: 'Bridge Piece 3',
+          hint: 'Say the colors out loud — green, blue, green, blue...',
+          rewardLabel: 'Bridge Piece #2',
         ),
       ],
     ),

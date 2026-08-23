@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/app.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
+import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
-import 'package:super_kid_adventure/game/systems/quest_engine.dart';
+import 'package:super_kid_adventure/game/systems/quest_reward_service.dart';
 import 'package:super_kid_adventure/shared/widgets/shake_widget.dart';
 
 import 'support/fake_local_storage_service.dart';
@@ -79,34 +80,57 @@ void main() {
     expect(find.text('Repair the Jungle Bridge'), findsOneWidget);
     expect(find.text('The Treehouse Ladder'), findsOneWidget);
 
-    // Open the bridge quest and read its story intro.
+    // Open the bridge quest: the NPC's story dialogue plays one short
+    // line at a time.
     final quest = JungleQuests.all
         .firstWhere((q) => q.id == 'jungle_bridge_repair');
     await tester.tap(find.text('Repair the Jungle Bridge'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('bridge is broken'), findsOneWidget);
+    expect(find.text('Momo the Monkey'), findsOneWidget);
+    expect(find.text('Uh-oh!'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('dialogue_next')));
+    await tester.pumpAndSettle();
+    expect(find.text('The jungle bridge is broken!'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('dialogue_skip')));
+    await tester.pumpAndSettle();
 
-    // Play it through, answering every challenge correctly.
-    await tester.tap(find.text('Start Quest'));
+    // Play it through, answering every challenge correctly. The memory
+    // challenge shows its study phase first.
+    await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
     for (var i = 0; i < quest.challenges.length; i++) {
       final challenge = quest.challenges[i];
+      if (challenge is MemoryChallenge) {
+        expect(find.text(challenge.itemsToRemember), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('memory_ready')));
+        await tester.pumpAndSettle();
+      }
       await tester
           .tap(find.byKey(ValueKey('option_${challenge.correctIndex}')));
       await tester.pumpAndSettle();
-      if (i < quest.challenges.length - 1) {
-        // Story-item reward dialog between challenges.
-        expect(find.textContaining(challenge.rewardLabel!), findsOneWidget);
-        await tester.tap(find.text('Next!'));
-        await tester.pumpAndSettle();
-      }
+      // Story-item reward dialog after every solved challenge.
+      expect(find.textContaining(challenge.rewardLabel!), findsOneWidget);
+      await tester.tap(find.text('Next!'));
+      await tester.pumpAndSettle();
     }
 
-    // Celebration screen with the one-time star + coin reward.
+    // The bridge-repair story resolution: each tap reveals the next
+    // beat, ending on Hooray!
+    for (var i = 1; i < quest.resolutionSteps.length; i++) {
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+    }
+    expect(find.textContaining('bridge is fixed'), findsOneWidget);
+    await tester.tap(find.text('Hooray!'));
+    await tester.pumpAndSettle();
+
+    // Celebration screen with the one-time perfect-run reward (no
+    // misses anywhere → bonus star + the perfect coin payout).
     expect(find.text('Quest Complete!'), findsOneWidget);
-    final expectedCoins = quest.starReward * QuestEngine.coinsPerStar;
+    final expectedReward = QuestRewardService.calculate(
+        baseStarReward: quest.starReward, wrongAttempts: 0);
     expect(
-      find.text('+${quest.starReward} ⭐  +$expectedCoins 🪙'),
+      find.text('+${expectedReward.stars} ⭐  +${expectedReward.coins} 🪙'),
       findsOneWidget,
     );
 
@@ -126,7 +150,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Repair the Jungle Bridge'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start Quest'));
+    await tester.tap(find.byKey(const ValueKey('dialogue_skip')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
 
     final challenge = JungleQuests.all

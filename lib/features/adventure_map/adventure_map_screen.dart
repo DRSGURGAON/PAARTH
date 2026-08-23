@@ -95,7 +95,8 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
     final storage = AppScope.of(context).storage;
     final stars = ProgressRepository(storage).stars;
     final heroProfile = HeroRepository(storage).load();
-    final completedQuestIds = QuestRepository(storage).completedQuestIds();
+    final questRepository = QuestRepository(storage);
+    final completedQuestIds = questRepository.completedQuestIds();
 
     // The furthest-unlocked location is where the hero marker stands —
     // simple derived "current position," not a separately-tracked one.
@@ -134,6 +135,7 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
                     index: i,
                     stars: stars,
                     heroProfile: heroProfile,
+                    questRepository: questRepository,
                     completedQuestIds: completedQuestIds,
                     isCurrent: i == currentIndex,
                   ),
@@ -150,6 +152,7 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
     required int index,
     required int stars,
     required HeroProfile heroProfile,
+    required QuestRepository questRepository,
     required Set<String> completedQuestIds,
     required bool isCurrent,
   }) {
@@ -161,9 +164,14 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
     final state = isCompleted
         ? _LocationState.completed
         : (isUnlocked ? _LocationState.unlocked : _LocationState.locked);
+    // Actual stars each clear paid out (a perfect run pays a bonus);
+    // the base reward stands in for clears saved before that existed.
     final starsEarned = locationQuests
         .where((q) => completedQuestIds.contains(q.id))
-        .fold<int>(0, (sum, q) => sum + q.starReward);
+        .fold<int>(
+            0,
+            (sum, q) =>
+                sum + (questRepository.starsEarnedFor(q.id) ?? q.starReward));
 
     return _MapNode(
       location: location,

@@ -10,11 +10,16 @@ import 'package:super_kid_adventure/game/repositories/quest_repository.dart';
 import 'support/fake_local_storage_service.dart';
 
 void main() {
-  Future<Widget> buildHarness({int stars = 0, Set<String>? completedQuestIds}) async {
+  Future<Widget> buildHarness({
+    int stars = 0,
+    Set<String>? completedQuestIds,
+    Map<String, int> starsEarned = const {},
+  }) async {
     final storage = FakeLocalStorageService();
     if (stars > 0) await ProgressRepository(storage).addStars(stars);
     for (final id in completedQuestIds ?? const <String>{}) {
-      await QuestRepository(storage).markCompleted(id);
+      await QuestRepository(storage)
+          .markCompleted(id, starsEarned: starsEarned[id]);
     }
     return AppScope(
       storage: storage,
@@ -79,6 +84,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('✓ 4 ⭐ earned'), findsOneWidget);
+  });
+
+  testWidgets('the completed caption shows the stars actually earned when '
+      'recorded (perfect runs pay a bonus)', (tester) async {
+    final treeHouseQuestIds =
+        JungleQuests.forLocation('tree_house').map((q) => q.id).toList();
+    await tester.pumpWidget(
+      await buildHarness(
+        stars: 6,
+        completedQuestIds: treeHouseQuestIds.toSet(),
+        starsEarned: {for (final id in treeHouseQuestIds) id: 3},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('✓ 6 ⭐ earned'), findsOneWidget);
   });
 
   testWidgets('a location with only some quests completed is not marked completed',

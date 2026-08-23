@@ -7,15 +7,21 @@ import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
 import '../../game/repositories/coin_repository.dart';
 import '../../game/repositories/progress_repository.dart';
+import '../../game/repositories/quest_progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../shared/widgets/shake_widget.dart';
 import 'quest_complete_screen.dart';
+import 'quest_resolution_screen.dart';
 
 /// Plays a quest's challenges one at a time: big visual, short prompt,
-/// large answer buttons. Wrong answers get rotating encouragement and a
-/// retry; each solved challenge hands over its story item; solving the
-/// last one goes straight to the celebration screen.
+/// large answer buttons. Wrong answers get rotating encouragement (plus
+/// the challenge's gentle hint) and a retry; each solved challenge
+/// hands over its story item; solving the last one flows into the
+/// quest's story resolution, then the celebration screen.
+///
+/// Memory challenges get a study phase first: the items show big until
+/// the child taps "I'm ready!" — no timer, so it can't feel rushed.
 class QuestPlayScreen extends StatefulWidget {
   const QuestPlayScreen({required this.quest, super.key});
 
@@ -30,14 +36,18 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
   late FeedbackService _feedbackService;
   bool _loaded = false;
   String? _feedback;
+  String? _hint;
   int _shakeSignal = 0;
+  bool _studying = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Same guard pattern as HeroSelectionScreen: AppScope needs the
     // tree, and a repeat didChangeDependencies must not reset a quest
-    // the child is halfway through.
+    // the child is halfway through. (The engine itself also restores a
+    // saved run of this quest, so even a full app restart resumes at
+    // the start of the current challenge.)
     if (_loaded) return;
     final storage = AppScope.of(context).storage;
     _engine = QuestEngine(
@@ -45,8 +55,10 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
       progressRepository: ProgressRepository(storage),
       questRepository: QuestRepository(storage),
       coinRepository: CoinRepository(storage),
+      questProgressRepository: QuestProgressRepository(storage),
     );
     _feedbackService = FeedbackService(storage);
+    _studying = !_engine.isComplete && _engine.currentChallenge is MemoryChallenge;
     _loaded = true;
   }
 
@@ -60,24 +72,42 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
         _feedbackService.play(SoundEvent.incorrect);
         setState(() {
           _feedback = _engine.nextEncouragement();
+          _hint = challenge.hint;
           _shakeSignal++;
         });
       case AnswerResult.advanced:
         _feedbackService.play(SoundEvent.correct);
-        setState(() => _feedback = null);
+        setState(() {
+          _feedback = null;
+          _hint = null;
+        });
         if (challenge.rewardLabel != null) {
           await _showRewardDialog(challenge.rewardLabel!);
         }
-        if (mounted) setState(() {});
+        if (mounted) {
+          setState(() {
+            _studying = _engine.currentChallenge is MemoryChallenge;
+          });
+        }
       case AnswerResult.completed:
         _feedbackService.play(SoundEvent.correct);
+        if (challenge.rewardLabel != null) {
+          await _showRewardDialog(challenge.rewardLabel!);
+        }
+        if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
-            builder: (_) => QuestCompleteScreen(
-              quest: widget.quest,
-              starsAwarded: _engine.starsAwarded,
-              coinsAwarded: _engine.coinsAwarded,
-            ),
+            builder: (_) => widget.quest.resolutionSteps.isEmpty
+                ? QuestCompleteScreen(
+                    quest: widget.quest,
+                    starsAwarded: _engine.starsAwarded,
+                    coinsAwarded: _engine.coinsAwarded,
+                  )
+                : QuestResolutionScreen(
+                    quest: widget.quest,
+                    starsAwarded: _engine.starsAwarded,
+                    coinsAwarded: _engine.coinsAwarded,
+                  ),
           ),
         );
     }
@@ -119,7 +149,12 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final challenge = _engine.currentChallenge;
+    // After the final correct answer the reward dialog shows while this
+    // screen is still behind it — the engine is complete by then, so
+    // keep rendering the last challenge instead of indexing past it.
+    final challenge = _engine.isComplete
+        ? widget.quest.challenges.last
+        : _engine.currentChallenge;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -127,65 +162,117 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _ProgressDots(
-                total: widget.quest.challenges.length,
-                current: _engine.currentIndex,
-              ),
-              const Spacer(),
-              if (challenge.visual != null) ...[
-                Text(
-                  challenge.visual!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 40, height: 1.4),
-                ),
-                const SizedBox(height: 16),
-              ],
-              Text(
-                challenge.prompt,
-                textAlign: TextAlign.center,
-                style: textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 32,
-                child: _feedback == null
-                    ? null
-                    : Text(
-                        _feedback!,
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyLarge?.copyWith(
-                          color: AppColors.gentleWarning,
-                        ),
-                      ),
-              ),
-              const Spacer(),
-              ShakeWidget(
-                shakeSignal: _shakeSignal,
-                child: Column(
+          child: _studying && challenge is MemoryChallenge
+              ? _StudyPhase(
+                  challenge: challenge,
+                  onReady: () => setState(() => _studying = false),
+                )
+              : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (var i = 0; i < challenge.options.length; i++) ...[
-                      FilledButton(
-                        key: ValueKey('option_$i'),
-                        onPressed: () => _submit(i),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.inkNavy,
-                        ),
-                        child: Text(challenge.options[i]),
+                    _ProgressDots(
+                      total: widget.quest.challenges.length,
+                      current: _engine.currentIndex,
+                    ),
+                    const Spacer(),
+                    if (challenge is ChoiceChallenge &&
+                        challenge.visual != null) ...[
+                      Text(
+                        challenge.visual!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 40, height: 1.4),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                     ],
+                    Text(
+                      challenge.prompt,
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 56,
+                      child: _feedback == null
+                          ? null
+                          : Column(
+                              children: [
+                                Text(
+                                  _feedback!,
+                                  textAlign: TextAlign.center,
+                                  style: textTheme.bodyLarge?.copyWith(
+                                    color: AppColors.gentleWarning,
+                                  ),
+                                ),
+                                if (_hint != null)
+                                  Text(
+                                    '💡 $_hint',
+                                    textAlign: TextAlign.center,
+                                    style: textTheme.bodyMedium,
+                                  ),
+                              ],
+                            ),
+                    ),
+                    const Spacer(),
+                    ShakeWidget(
+                      shakeSignal: _shakeSignal,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < challenge.options.length; i++) ...[
+                            FilledButton(
+                              key: ValueKey('option_$i'),
+                              onPressed: () => _submit(i),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppColors.inkNavy,
+                              ),
+                              child: Text(challenge.options[i]),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
+    );
+  }
+}
+
+/// A memory challenge's look-first phase: the items big and centered,
+/// ended only by the child's own "I'm ready!" tap.
+class _StudyPhase extends StatelessWidget {
+  const _StudyPhase({required this.challenge, required this.onReady});
+
+  final MemoryChallenge challenge;
+  final VoidCallback onReady;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Spacer(),
+        Text(
+          challenge.studyPrompt,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 24),
+        Text(
+          challenge.itemsToRemember,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 48, height: 1.4),
+        ),
+        const Spacer(),
+        FilledButton(
+          key: const ValueKey('memory_ready'),
+          onPressed: onReady,
+          child: const Text("I'm ready!"),
+        ),
+      ],
     );
   }
 }

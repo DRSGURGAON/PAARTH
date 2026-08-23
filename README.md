@@ -381,6 +381,50 @@ Phase 3–13's quests, shop, and companions keep working unchanged:
   available here, so none of this has been compiled, analyzed, or run
   — see Phase 13's note above, which still applies in full
 
+**Phase 3 redesign** — the quest experience was likewise revisited
+against a more detailed brief, deepening the existing quest engine
+rather than replacing it (all 10 quests, the mini-games, and the reward
+plumbing keep working):
+- **Story dialogue system** (`StoryDialogue`, one reusable component for
+  every quest): the quest's NPC — a new optional `QuestNpc` on the
+  `Quest` model, e.g. 🐒 Momo the Monkey — speaks short lines one at a
+  time with Next/Skip. Quests without authored dialogue fall back to
+  their one-paragraph `storyIntro` as a single step, so nothing broke
+- **Challenge framework**: `QuestChallenge` is now a sealed base type
+  (prompt, options, gentle `hint`, story-item reward) with two concrete
+  types — the existing `ChoiceChallenge` (emoji visual) and the new
+  `MemoryChallenge` (study emoji as long as you like → "I'm ready!" →
+  answer; no timer, so it can't feel rushed). Future types plug in the
+  same way
+- **Repair the Jungle Bridge** rebuilt to the brief: banana math (8−3)
+  → jungle-friends memory (🐒🐼🦊🐰) → magical-lock pattern (🟢🔵🟢🔵❓),
+  awarding Bridge Piece #1, Repair Tool, Bridge Piece #2, then a
+  **story resolution sequence** (`QuestResolutionScreen`) where each
+  tap pops in the next beat — pieces attach, bridge fixes, the baby
+  monkey crosses — before the celebration
+- **Tiered rewards, centralized** (`QuestRewardService`, never
+  calculated in UI code): perfect no-miss run = base stars + 1 bonus
+  (⭐⭐⭐) and 50 🪙; with retries = base stars (⭐⭐) and 35 🪙. Nothing
+  is ever deducted for a wrong answer. `QuestRepository` now also
+  records the stars each clear actually paid, so the map's "✓ N ⭐
+  earned" caption shows real numbers
+- **Mid-quest save/resume** (`QuestProgressRepository` + engine
+  restore): backing out or killing the app mid-quest resumes at the
+  start of the current challenge with the miss count intact (misses
+  decide the reward tier, so they persist too). The quest list shows
+  "Keep going — you're mid-adventure!" for the saved run, driven by a
+  proper derived `QuestState` (locked/available/inProgress/completed —
+  computed, never stored)
+- Wrong answers now also surface each challenge's authored 💡 hint
+  under the usual rotating encouragement
+- Tests: engine resume/reward-tier coverage, `QuestRewardService`,
+  `QuestProgressRepository` (round-trip, clear, corruption),
+  `resolveQuestState`, `QuestRepository` stars-earned recording,
+  `StoryDialogue` widget flow, and the full-flow widget test now walks
+  dialogue → math → memory → pattern → bridge repair → celebration
+- Same honest limit: no Flutter SDK available here — not compiled,
+  analyzed, or run; Phase 13's note still applies in full
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -427,11 +471,18 @@ iOS support is architected for but not built yet — see the brief).
    start unlocked; tap Tree House → a list of 2 quests. Locked locations
    show a lock icon, a gentle "Earn N more ⭐" hint on tap (with a small
    shake), and never rely on color alone to say so.
-6. Play **Repair the Jungle Bridge**: story intro → 3 challenges with
-   big emoji visuals and tap-to-answer buttons. A wrong answer shows
-   encouragement ("Almost! Let's try again!") and lets you retry; each
-   solved challenge awards a story item (Bridge Piece 1…3); finishing
-   shows a celebration screen with **+2 ⭐**.
+6. Play **Repair the Jungle Bridge**: Momo the Monkey tells the story
+   in short dialogue lines (Next to advance, Skip to jump ahead), then
+   **Start Adventure** → 3 challenges: banana math, a remember-the-
+   jungle-friends memory round (study as long as you like, then "I'm
+   ready!"), and a magical-lock pattern. A wrong answer shows
+   encouragement ("Almost! Let's try again!") plus a gentle 💡 hint and
+   lets you retry; each solved challenge awards a story item (Bridge
+   Piece #1, Repair Tool, Bridge Piece #2). Then the bridge-repair
+   story plays out beat by beat — pieces attach, the bridge fixes, the
+   baby monkey crosses — before the celebration screen. A perfect
+   no-miss run pays **+3 ⭐ +50 🪙**; a run with retries still pays
+   **+2 ⭐ +35 🪙** (retrying is never punished).
 7. Back on the map, your stars now count toward unlocks: **Waterfall**
    opens at 6 ⭐, **Lion Cave** at 10 ⭐, **Mountain** at 14 ⭐ (real and
    locked, but its own quests aren't authored yet — opening it early
@@ -441,7 +492,10 @@ iOS support is architected for but not built yet — see the brief).
    hint. Your hero also appears as a small marker at your furthest
    unlocked location.
 8. Replay a completed quest: it's marked "Completed! Play again for
-   practice" and awards no extra stars.
+   practice" and awards no extra stars. Quit mid-quest instead (back
+   button, or kill the app) and the quest list shows "Keep going —
+   you're mid-adventure!"; reopening resumes at the start of the
+   challenge you were on, misses remembered.
 9. From **Home**, tap **Mini-Games** → **Math Dash**: the intro states
    the reward rule ("Get 6 right on the first try to earn a ⭐"), then
    8 puzzles — small counts appear as countable emoji. Answer 3 in a

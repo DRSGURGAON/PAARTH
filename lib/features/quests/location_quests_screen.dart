@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
+import '../../game/models/quest_state.dart';
 import '../../game/models/world_location.dart';
 import '../../game/quests/jungle_quests.dart';
+import '../../game/repositories/quest_progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import 'quest_intro_screen.dart';
 
-/// The quests available at one map location. Completed quests stay
-/// replayable for practice (marked with a check, no repeat rewards).
+/// The quests available at one map location, each labeled from its
+/// derived [QuestState] — start, continue (a run is saved mid-way), or
+/// completed. Completed quests stay replayable for practice (marked
+/// with a check, no repeat rewards).
 class LocationQuestsScreen extends StatefulWidget {
   const LocationQuestsScreen({required this.location, super.key});
 
@@ -32,9 +36,10 @@ class _LocationQuestsScreenState extends State<LocationQuestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final storage = AppScope.of(context).storage;
     final quests = JungleQuests.forLocation(widget.location.id);
-    final completedIds =
-        QuestRepository(AppScope.of(context).storage).completedQuestIds();
+    final completedIds = QuestRepository(storage).completedQuestIds();
+    final inProgressQuestId = QuestProgressRepository(storage).load()?.questId;
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.location.name)),
@@ -47,10 +52,16 @@ class _LocationQuestsScreenState extends State<LocationQuestsScreen> {
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final quest = quests[index];
-                  final isCompleted = completedIds.contains(quest.id);
+                  final state = resolveQuestState(
+                    questId: quest.id,
+                    // Only reachable through an unlocked map location.
+                    locationUnlocked: true,
+                    completedQuestIds: completedIds,
+                    inProgressQuestId: inProgressQuestId,
+                  );
                   return _QuestCard(
                     quest: quest,
-                    isCompleted: isCompleted,
+                    state: state,
                     onTap: () => _openQuest(quest),
                   );
                 },
@@ -93,16 +104,23 @@ class _ComingSoon extends StatelessWidget {
 class _QuestCard extends StatelessWidget {
   const _QuestCard({
     required this.quest,
-    required this.isCompleted,
+    required this.state,
     required this.onTap,
   });
 
   final Quest quest;
-  final bool isCompleted;
+  final QuestState state;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isCompleted = state == QuestState.completed;
+    final subtitle = switch (state) {
+      QuestState.completed => 'Completed! Play again for practice',
+      QuestState.inProgress => "Keep going — you're mid-adventure!",
+      _ => 'Earn ${quest.starReward} ⭐',
+    };
+
     return Card(
       child: InkWell(
         onTap: onTap,
@@ -139,9 +157,7 @@ class _QuestCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isCompleted
-                          ? 'Completed! Play again for practice'
-                          : 'Earn ${quest.starReward} ⭐',
+                      subtitle,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],

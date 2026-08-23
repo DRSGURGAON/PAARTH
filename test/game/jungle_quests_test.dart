@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
 import 'package:super_kid_adventure/game/worlds/jungle_world.dart';
 
@@ -60,6 +61,25 @@ void main() {
           );
           expect(challenge.prompt, isNotEmpty);
         }
+      }
+    });
+
+    test('the first quest tells its full story: NPC, dialogue, a memory '
+        'challenge, and a bridge-repair resolution', () {
+      final quest =
+          JungleQuests.all.firstWhere((q) => q.id == 'jungle_bridge_repair');
+
+      expect(quest.npc, isNotNull);
+      expect(quest.introDialogue.length, greaterThanOrEqualTo(3));
+      expect(quest.resolutionSteps.length, greaterThanOrEqualTo(3));
+      expect(quest.challenges.whereType<MemoryChallenge>(), hasLength(1));
+      // Spec'd challenge order: math → memory → pattern.
+      expect(quest.challenges[0].category, ChallengeCategory.math);
+      expect(quest.challenges[1].category, ChallengeCategory.memory);
+      expect(quest.challenges[2].category, ChallengeCategory.logic);
+      for (final challenge in quest.challenges) {
+        expect(challenge.hint, isNotNull);
+        expect(challenge.rewardLabel, isNotNull);
       }
     });
 
