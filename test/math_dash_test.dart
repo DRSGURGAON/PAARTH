@@ -66,7 +66,7 @@ void main() {
 
     expect(find.text('You got $total of $total!'), findsOneWidget);
     expect(find.text('🔥 Best streak: $total in a row'), findsOneWidget);
-    final expected = QuestRewardService.calculateMathDash(
+    final expected = QuestRewardService.calculateMiniGameSession(
         correctAnswers: total, totalQuestions: total, bestStreak: total);
     expect(find.textContaining('+${expected.stars} ⭐'), findsOneWidget);
     expect(ProgressRepository(storage).stars, expected.stars);
@@ -136,7 +136,7 @@ void main() {
   testWidgets('an embedded session skips the intro and pops a completed '
       'result without paying rewards itself', (tester) async {
     storage = FakeLocalStorageService();
-    MathDashResult? popped;
+    MiniGameSessionResult? popped;
     await tester.pumpWidget(AppScope(
       storage: storage,
       child: MaterialApp(
@@ -145,7 +145,7 @@ void main() {
           builder: (context) => Center(
             child: FilledButton(
               onPressed: () async {
-                popped = await Navigator.of(context).push<MathDashResult>(
+                popped = await Navigator.of(context).push<MiniGameSessionResult>(
                   MaterialPageRoute(
                     builder: (_) =>
                         const MathDashScreen(embedded: true, sessionLength: 3),

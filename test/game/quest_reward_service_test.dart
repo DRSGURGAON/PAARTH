@@ -32,40 +32,40 @@ void main() {
     });
   });
 
-  group('QuestRewardService.calculateMathDash', () {
+  group('QuestRewardService.calculateMiniGameSession', () {
     test('the star threshold is ~80% of the session, rounded up', () {
-      expect(QuestRewardService.mathDashStarThreshold(5), 4);
-      expect(QuestRewardService.mathDashStarThreshold(3), 3);
+      expect(QuestRewardService.sessionStarThreshold(5), 4);
+      expect(QuestRewardService.sessionStarThreshold(3), 3);
     });
 
     test('a perfect session pays the star plus the perfect-streak bonus', () {
-      final reward = QuestRewardService.calculateMathDash(
+      final reward = QuestRewardService.calculateMiniGameSession(
           correctAnswers: 5, totalQuestions: 5, bestStreak: 5);
 
       expect(reward.stars, 1);
       expect(
           reward.coins,
-          QuestRewardService.mathDashCoins +
+          QuestRewardService.sessionCoins +
               QuestRewardService.perfectStreakBonusCoins);
     });
 
     test('reaching the threshold with a mid streak pays star + small bonus',
         () {
-      final reward = QuestRewardService.calculateMathDash(
+      final reward = QuestRewardService.calculateMiniGameSession(
           correctAnswers: 4, totalQuestions: 5, bestStreak: 3);
 
       expect(reward.stars, 1);
       expect(
           reward.coins,
-          QuestRewardService.mathDashCoins +
+          QuestRewardService.sessionCoins +
               QuestRewardService.streakBonusCoins);
     });
 
     test('below the threshold: no star, and a streak still earns a little',
         () {
-      final noStreak = QuestRewardService.calculateMathDash(
+      final noStreak = QuestRewardService.calculateMiniGameSession(
           correctAnswers: 3, totalQuestions: 5, bestStreak: 2);
-      final withStreak = QuestRewardService.calculateMathDash(
+      final withStreak = QuestRewardService.calculateMiniGameSession(
           correctAnswers: 3, totalQuestions: 5, bestStreak: 3);
 
       expect(noStreak.stars, 0);
@@ -75,7 +75,7 @@ void main() {
     });
 
     test('nothing is ever negative, even with zero correct', () {
-      final reward = QuestRewardService.calculateMathDash(
+      final reward = QuestRewardService.calculateMiniGameSession(
           correctAnswers: 0, totalQuestions: 5, bestStreak: 0);
 
       expect(reward.stars, 0);

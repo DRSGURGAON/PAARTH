@@ -1,95 +1,123 @@
 import 'dart:math';
 
+import '../data/memory_objects.dart';
 import '../models/memory_round.dart';
 import '../models/quest.dart';
 
 /// Generates Memory Master rounds scaled by difficulty level (1–5):
-/// more items and less relative study time as the level rises. All
-/// four question types from the design brief (position, sequence,
-/// object, number) are covered — see [MemoryQuestionType].
+/// 3 jungle friends at level 1, 4 at level 2, 5 from level 3 up, with
+/// slightly less study time at the top levels. Every friend stands at a
+/// distinct named scene spot ("the monkey was by the tree"), so
+/// position questions are about places a child can picture. The
+/// headline Phase 5 types — object recall and position recall — are
+/// generated most often; missing-object, sequence, and count rounds
+/// add occasional variety.
 class MemoryRoundGenerator {
   MemoryRoundGenerator({Random? random}) : _random = random ?? Random();
 
   final Random _random;
 
-  static const List<String> _palette = [
-    '🍎', '🍌', '🍇', '🍓', '🍊', '🥝',
-    '🐶', '🐱', '🐸', '🦋', '🐢', '🐝',
-  ];
-
-  static const List<int> _itemCountByLevel = [0, 3, 4, 5, 6, 7];
+  /// Items per level (1-based; index 0 unused). Capped at 5 so recall
+  /// questions always have enough unseen friends to use as decoys;
+  /// levels 4–5 add challenge through study time instead (brief
+  /// section 6: 6–8 objects stay a later-architecture step).
+  static const List<int> _itemCountByLevel = [0, 3, 4, 5, 5, 5];
 
   MemoryRound next(int level) {
-    switch (_random.nextInt(4)) {
+    switch (_random.nextInt(6)) {
       case 0:
-        return position(level);
       case 1:
-        return sequenceNext(level);
+        return objectRecall(level);
       case 2:
+      case 3:
+        return positionRecall(level);
+      case 4:
         return missingObject(level);
       default:
-        return count(level);
+        return _random.nextBool() ? sequenceNext(level) : count(level);
     }
   }
 
-  MemoryRound position(int level) {
-    final items = _studySet(level);
-    final index = _random.nextInt(items.length);
-    final correct = items[index];
-    final options = _optionsAround(correct, exclude: {});
-    return MemoryRound(
-      items: items,
-      studyDuration: _studyDuration(items.length),
-      questionType: MemoryQuestionType.position,
-      question: ChoiceChallenge(
-        category: ChallengeCategory.memory,
-        prompt: 'What was in position ${index + 1}?',
-        options: options,
-        correctIndex: options.indexOf(correct),
-      ),
+  /// "Which one did you see?" — one shown friend, two unseen decoys.
+  MemoryRound objectRecall(int level) {
+    final placements = _scene(level);
+    final seen = placements[_random.nextInt(placements.length)].object;
+    final decoys = _unseenAnimals(placements)..shuffle(_random);
+    final options = [seen.emoji, decoys[0].emoji, decoys[1].emoji]
+      ..shuffle(_random);
+    return _round(
+      placements: placements,
+      level: level,
+      type: MemoryQuestionType.objectRecall,
+      prompt: 'Which one did you see?',
+      options: options,
+      correctIndex: options.indexOf(seen.emoji),
     );
   }
 
-  MemoryRound sequenceNext(int level) {
-    final items = _studySet(level);
-    final index = items.length < 2 ? 0 : _random.nextInt(items.length - 1);
-    final anchor = items[index];
-    final correct = items[index + 1];
-    final options = _optionsAround(correct, exclude: {anchor});
-    return MemoryRound(
-      items: items,
-      studyDuration: _studyDuration(items.length),
-      questionType: MemoryQuestionType.sequenceNext,
-      question: ChoiceChallenge(
-        category: ChallengeCategory.memory,
-        prompt: 'What came right after $anchor?',
-        options: options,
-        correctIndex: options.indexOf(correct),
-      ),
+  /// "Where was the panda?" — answered with named scene spots.
+  MemoryRound positionRecall(int level) {
+    final placements = _scene(level);
+    final target = placements[_random.nextInt(placements.length)];
+    final otherSpots = MemoryObjects.spots
+        .where((spot) => spot.id != target.spot.id)
+        .toList()
+      ..shuffle(_random);
+    final options = [
+      _spotLabel(target.spot),
+      _spotLabel(otherSpots[0]),
+      _spotLabel(otherSpots[1]),
+    ]..shuffle(_random);
+    return _round(
+      placements: placements,
+      level: level,
+      type: MemoryQuestionType.positionRecall,
+      prompt: 'Where was the ${target.object.label}? ${target.object.emoji}',
+      options: options,
+      correctIndex: options.indexOf(_spotLabel(target.spot)),
     );
   }
 
   MemoryRound missingObject(int level) {
-    final items = _studySet(level);
-    final decoy = _pickNotIn(items);
-    final shownDistractors = (items.toList()..shuffle(_random)).take(2);
-    final options = [decoy, ...shownDistractors]..shuffle(_random);
-    return MemoryRound(
-      items: items,
-      studyDuration: _studyDuration(items.length),
-      questionType: MemoryQuestionType.missingObject,
-      question: ChoiceChallenge(
-        category: ChallengeCategory.memory,
-        prompt: 'Which one did you NOT see?',
-        options: options,
-        correctIndex: options.indexOf(decoy),
-      ),
+    final placements = _scene(level);
+    final decoy = _unseenAnimals(placements)[0];
+    final shown = placements.map((p) => p.object.emoji).toList()
+      ..shuffle(_random);
+    final options = [decoy.emoji, shown[0], shown[1]]..shuffle(_random);
+    return _round(
+      placements: placements,
+      level: level,
+      type: MemoryQuestionType.missingObject,
+      prompt: 'Which one did you NOT see?',
+      options: options,
+      correctIndex: options.indexOf(decoy.emoji),
+    );
+  }
+
+  MemoryRound sequenceNext(int level) {
+    final placements = _scene(level);
+    final index = _random.nextInt(placements.length - 1);
+    final anchor = placements[index].object;
+    final correct = placements[index + 1].object;
+    final decoyPool = MemoryObjects.animals
+        .where((a) => a.id != correct.id && a.id != anchor.id)
+        .toList()
+      ..shuffle(_random);
+    final options = [correct.emoji, decoyPool[0].emoji, decoyPool[1].emoji]
+      ..shuffle(_random);
+    return _round(
+      placements: placements,
+      level: level,
+      type: MemoryQuestionType.sequenceNext,
+      prompt: 'Who came right after ${anchor.emoji}?',
+      options: options,
+      correctIndex: options.indexOf(correct.emoji),
     );
   }
 
   MemoryRound count(int level) {
-    final items = _studySet(level);
-    final correct = items.length;
+    final placements = _scene(level);
+    final correct = placements.length;
     final candidates = <int>{correct};
     for (final offset in [1, -1, 2, -2]) {
       if (candidates.length >= 3) break;
@@ -97,40 +125,64 @@ class MemoryRoundGenerator {
       if (value > 0) candidates.add(value);
     }
     final options = candidates.toList()..shuffle(_random);
+    return _round(
+      placements: placements,
+      level: level,
+      type: MemoryQuestionType.count,
+      prompt: 'How many friends did you see?',
+      options: options.map((v) => '$v').toList(),
+      correctIndex: options.indexOf(correct),
+    );
+  }
+
+  /// Distinct animals placed at distinct spots.
+  List<MemoryPlacement> _scene(int level) {
+    final itemCount = _itemCountByLevel[level.clamp(1, 5)];
+    final animals = MemoryObjects.animals.toList()..shuffle(_random);
+    final spots = MemoryObjects.spots.toList()..shuffle(_random);
+    return [
+      for (var i = 0; i < itemCount; i++)
+        MemoryPlacement(object: animals[i], spot: spots[i]),
+    ];
+  }
+
+  List<MemoryObject> _unseenAnimals(List<MemoryPlacement> placements) {
+    final seenIds = {for (final p in placements) p.object.id};
+    return MemoryObjects.animals
+        .where((animal) => !seenIds.contains(animal.id))
+        .toList();
+  }
+
+  String _spotLabel(JungleSpot spot) => '${spot.emoji} ${_capitalize(spot.label)}';
+
+  String _capitalize(String text) =>
+      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
+
+  MemoryRound _round({
+    required List<MemoryPlacement> placements,
+    required int level,
+    required MemoryQuestionType type,
+    required String prompt,
+    required List<String> options,
+    required int correctIndex,
+  }) {
     return MemoryRound(
-      items: items,
-      studyDuration: _studyDuration(items.length),
-      questionType: MemoryQuestionType.count,
+      placements: placements,
+      studyDuration: _studyDuration(placements.length, level),
+      questionType: type,
       question: ChoiceChallenge(
         category: ChallengeCategory.memory,
-        prompt: 'How many things did you see?',
-        options: options.map((v) => '$v').toList(),
-        correctIndex: options.indexOf(correct),
+        prompt: prompt,
+        options: options,
+        correctIndex: correctIndex,
       ),
     );
   }
 
-  List<String> _studySet(int level) {
-    final count = _itemCountByLevel[level.clamp(1, 5)];
-    final shuffled = _palette.toList()..shuffle(_random);
-    return shuffled.take(count).toList();
-  }
-
-  Duration _studyDuration(int itemCount) =>
-      Duration(milliseconds: 1200 + itemCount * 600);
-
-  /// Builds a 3-option set: [correct] plus 2 palette emoji not in
-  /// [exclude] and not equal to [correct].
-  List<String> _optionsAround(String correct, {required Set<String> exclude}) {
-    final pool = _palette.where((e) => e != correct && !exclude.contains(e)).toList()
-      ..shuffle(_random);
-    final options = [correct, ...pool.take(2)];
-    options.shuffle(_random);
-    return options;
-  }
-
-  String _pickNotIn(List<String> items) {
-    final pool = _palette.where((e) => !items.contains(e)).toList();
-    return pool[_random.nextInt(pool.length)];
+  /// More items → more time; top levels trim a little (never harshly —
+  /// there is no visible countdown pressure anywhere).
+  Duration _studyDuration(int itemCount, int level) {
+    final trimmed = level.clamp(1, 5) >= 4 ? 300 * (level.clamp(1, 5) - 3) : 0;
+    return Duration(milliseconds: 1200 + itemCount * 600 - trimmed);
   }
 }

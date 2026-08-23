@@ -91,10 +91,30 @@ class MathDashChallenge extends QuestChallenge {
   final int questionCount;
 }
 
-/// A short remember-then-answer challenge: [itemsToRemember] is shown
-/// big, the child taps "I'm ready!", the items hide, and the options
-/// appear. Kept deliberately gentle for a 7-year-old — the child
-/// controls when the study phase ends, there is no timer.
+/// A quest challenge that embeds a short Memory Master session
+/// (Phase 5), same contract as [MathDashChallenge]: story framing +
+/// launch button, [questionCount] generated rounds, completion reported
+/// back to the quest engine. Reusable by any quest.
+class MemoryMasterChallenge extends QuestChallenge {
+  const MemoryMasterChallenge({
+    required super.prompt,
+    this.questionCount = 3,
+    super.rewardLabel,
+  }) : super(
+          category: ChallengeCategory.memory,
+          options: const ['✓'],
+          correctIndex: 0,
+        );
+
+  final int questionCount;
+}
+
+/// A short authored remember-then-answer challenge: [itemsToRemember]
+/// is shown big, the child taps "I'm ready!", the items hide, and the
+/// options appear. Kept deliberately gentle for a 7-year-old — the
+/// child controls when the study phase ends, there is no timer. Quests
+/// wanting a full generated memory session use [MemoryMasterChallenge]
+/// instead; this stays for hand-authored one-off memory moments.
 class MemoryChallenge extends QuestChallenge {
   const MemoryChallenge({
     required super.prompt,

@@ -52,9 +52,14 @@ void main() {
 
         for (final challenge in quest.challenges) {
           expect(challenge.prompt, isNotEmpty);
+          // Embedded mini-game sessions generate their questions at
+          // play time; the fixed options are engine bookkeeping, not
+          // child-facing.
           if (challenge is MathDashChallenge) {
-            // Its questions are generated at play time; the fixed
-            // options are engine bookkeeping, not child-facing.
+            expect(challenge.questionCount, greaterThan(0));
+            continue;
+          }
+          if (challenge is MemoryMasterChallenge) {
             expect(challenge.questionCount, greaterThan(0));
             continue;
           }
@@ -70,23 +75,24 @@ void main() {
       }
     });
 
-    test('the first quest tells its full story: NPC, dialogue, an embedded '
-        'Math Dash, a memory challenge, and a bridge-repair resolution', () {
+    test('the first quest tells its full story: NPC, dialogue, embedded '
+        'Math Dash and Memory Master, and a bridge-repair resolution', () {
       final quest =
           JungleQuests.all.firstWhere((q) => q.id == 'jungle_bridge_repair');
 
       expect(quest.npc, isNotNull);
       expect(quest.introDialogue.length, greaterThanOrEqualTo(3));
       expect(quest.resolutionSteps.length, greaterThanOrEqualTo(3));
-      // Spec'd challenge order: Math Dash → memory → pattern.
+      // Spec'd challenge order: Math Dash → Memory Master → pattern.
       expect(quest.challenges[0], isA<MathDashChallenge>());
-      expect(quest.challenges[1], isA<MemoryChallenge>());
+      expect(quest.challenges[1], isA<MemoryMasterChallenge>());
       expect(quest.challenges[2].category, ChallengeCategory.logic);
       for (final challenge in quest.challenges) {
         expect(challenge.rewardLabel, isNotNull);
-        // Fixed-answer challenges carry an authored hint; the Math Dash
-        // session generates its own hints per question.
-        if (challenge is! MathDashChallenge) {
+        // Fixed-answer challenges carry an authored hint; embedded
+        // mini-game sessions generate their own hints per question.
+        if (challenge is! MathDashChallenge &&
+            challenge is! MemoryMasterChallenge) {
           expect(challenge.hint, isNotNull);
         }
       }

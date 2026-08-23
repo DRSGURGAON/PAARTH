@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:super_kid_adventure/game/models/memory_round.dart';
 import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/systems/memory_round_generator.dart';
 
@@ -12,10 +13,18 @@ void main() {
       generator = MemoryRoundGenerator(random: Random(7));
     });
 
-    void expectWellFormed(dynamic round) {
-      expect(round.items, isNotEmpty);
-      expect(round.items.toSet().length, round.items.length,
-          reason: 'items must be distinct: ${round.items}');
+    void expectWellFormed(MemoryRound round) {
+      expect(round.placements, isNotEmpty);
+      expect(
+        round.placements.map((p) => p.object.id).toSet().length,
+        round.placements.length,
+        reason: 'animals must be distinct',
+      );
+      expect(
+        round.placements.map((p) => p.spot.id).toSet().length,
+        round.placements.length,
+        reason: 'spots must be distinct',
+      );
       expect(round.question.category, ChallengeCategory.memory);
       expect(round.question.options.length, greaterThanOrEqualTo(2));
       expect(
@@ -33,7 +42,8 @@ void main() {
       for (var level = 1; level <= 5; level++) {
         for (var i = 0; i < 30; i++) {
           expectWellFormed(generator.next(level));
-          expectWellFormed(generator.position(level));
+          expectWellFormed(generator.objectRecall(level));
+          expectWellFormed(generator.positionRecall(level));
           expectWellFormed(generator.sequenceNext(level));
           expectWellFormed(generator.missingObject(level));
           expectWellFormed(generator.count(level));
@@ -41,40 +51,39 @@ void main() {
       }
     });
 
-    test('item count grows with level', () {
-      final level1 = generator.position(1).items.length;
-      final level5 = generator.position(5).items.length;
-
-      expect(level1, lessThan(level5));
+    test('item count follows the spec: 3 at level 1, 4 at level 2, 5 from '
+        'level 3', () {
+      expect(generator.objectRecall(1).placements.length, 3);
+      expect(generator.objectRecall(2).placements.length, 4);
+      expect(generator.objectRecall(3).placements.length, 5);
+      expect(generator.objectRecall(5).placements.length, 5);
     });
 
-    test('position question answer matches the item at that position', () {
+    test('objectRecall answer really was shown; decoys really were not', () {
       for (var i = 0; i < 30; i++) {
-        final round = generator.position(3);
-        final positionMatch =
-            RegExp(r'position (\d+)').firstMatch(round.question.prompt)!;
-        final index = int.parse(positionMatch.group(1)!) - 1;
+        final round = generator.objectRecall(3);
+        final shown = round.items;
+        final answer = round.question.options[round.question.correctIndex];
 
-        expect(
-          round.question.options[round.question.correctIndex],
-          round.items[index],
-        );
+        expect(shown, contains(answer));
+        for (var o = 0; o < round.question.options.length; o++) {
+          if (o == round.question.correctIndex) continue;
+          expect(shown, isNot(contains(round.question.options[o])),
+              reason: 'decoys must not have been shown');
+        }
       }
     });
 
-    test('sequenceNext answer is the item right after the anchor', () {
+    test('positionRecall answer names the spot the animal actually stood at',
+        () {
       for (var i = 0; i < 30; i++) {
-        final round = generator.sequenceNext(3);
-        final anchorMatch =
-            RegExp(r'after (.+)\?$').firstMatch(round.question.prompt)!;
-        final anchor = anchorMatch.group(1)!;
-        final anchorIndex = round.items.indexOf(anchor);
-        final expected = round.items[anchorIndex + 1];
+        final round = generator.positionRecall(3);
+        final target = round.placements.firstWhere(
+            (p) => round.question.prompt.contains(p.object.label));
+        final answer = round.question.options[round.question.correctIndex];
 
-        expect(
-          round.question.options[round.question.correctIndex],
-          expected,
-        );
+        expect(answer, contains(target.spot.emoji));
+        expect(answer.toLowerCase(), contains(target.spot.label));
       }
     });
 
@@ -87,20 +96,40 @@ void main() {
       }
     });
 
+    test('sequenceNext answer is the friend right after the anchor', () {
+      for (var i = 0; i < 30; i++) {
+        final round = generator.sequenceNext(3);
+        final anchorEmoji = RegExp(r'after (.+)\?$')
+            .firstMatch(round.question.prompt)!
+            .group(1)!;
+        final anchorIndex = round.items.indexOf(anchorEmoji);
+        final expected = round.items[anchorIndex + 1];
+
+        expect(
+          round.question.options[round.question.correctIndex],
+          expected,
+        );
+      }
+    });
+
     test('count question answer equals the number of studied items', () {
       for (var i = 0; i < 30; i++) {
         final round = generator.count(2);
         final answer = round.question.options[round.question.correctIndex];
 
-        expect(int.parse(answer), round.items.length);
+        expect(int.parse(answer), round.placements.length);
       }
     });
 
-    test('study duration is longer for larger item sets', () {
-      final small = generator.position(1);
-      final large = generator.position(5);
+    test('study duration is longer for larger scenes and slightly shorter '
+        'at top levels', () {
+      final small = generator.objectRecall(1);
+      final large = generator.objectRecall(3);
+      final top = generator.objectRecall(5);
 
       expect(large.studyDuration, greaterThan(small.studyDuration));
+      // Same item count at levels 3 and 5 — the top level trims time.
+      expect(top.studyDuration, lessThan(large.studyDuration));
     });
   });
 }

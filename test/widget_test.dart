@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/app.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/features/mini_games/math_dash_screen.dart';
+import 'package:super_kid_adventure/features/mini_games/memory_master_screen.dart';
 import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
 import 'package:super_kid_adventure/game/systems/quest_reward_service.dart';
@@ -96,8 +97,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Play it through, answering every challenge correctly. The first
-    // challenge embeds a real Math Dash session; the memory challenge
-    // shows its study phase first.
+    // two challenges embed real Math Dash / Memory Master sessions.
     await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
     for (var i = 0; i < quest.challenges.length; i++) {
@@ -115,12 +115,20 @@ void main() {
           await tester.pumpAndSettle();
         }
         // The finished session popped back into the quest.
-      } else {
-        if (challenge is MemoryChallenge) {
-          expect(find.text(challenge.itemsToRemember), findsOneWidget);
-          await tester.tap(find.byKey(const ValueKey('memory_ready')));
+      } else if (challenge is MemoryMasterChallenge) {
+        await tester.tap(find.byKey(const ValueKey('play_memory_master')));
+        await tester.pump();
+        for (var q = 0; q < challenge.questionCount; q++) {
+          final memState = tester.state<MemoryMasterScreenState>(
+              find.byType(MemoryMasterScreen));
+          await tester.pump(memState.currentStudyDuration +
+              const Duration(milliseconds: 50));
+          await tester.pumpAndSettle();
+          final correctIndex = memState.currentRound.question.correctIndex;
+          await tester.tap(find.byKey(ValueKey('option_$correctIndex')));
           await tester.pumpAndSettle();
         }
+      } else {
         await tester
             .tap(find.byKey(ValueKey('option_${challenge.correctIndex}')));
         await tester.pumpAndSettle();
@@ -163,37 +171,24 @@ void main() {
     await skipSplash(tester);
     await reachAdventureMap(tester);
 
+    // The bridge quest's first challenges are embedded mini-games with
+    // their own gentle wrong-answer handling (covered in their own
+    // tests) — exercise the quest-level retry flow on the Treehouse
+    // Ladder quest, whose challenges are all fixed-answer.
     await tester.tap(find.text('Tree House'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Repair the Jungle Bridge'));
+    await tester.tap(find.text('The Treehouse Ladder'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('dialogue_skip')));
+    // Its intro falls back to a single storyIntro line — one tap.
+    await tester.tap(find.byKey(const ValueKey('dialogue_next')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Start Adventure'));
     await tester.pumpAndSettle();
 
-    // The bridge quest's first challenge is now an embedded Math Dash —
-    // wrong answers inside it get their own gentle handling (covered in
-    // math_dash_test), so exercise the quest-level retry flow on the
-    // memory challenge instead: play through the dash first.
-    final quest = JungleQuests.all
-        .firstWhere((q) => q.id == 'jungle_bridge_repair');
-    final dash = quest.challenges.first as MathDashChallenge;
-    await tester.tap(find.byKey(const ValueKey('play_math_dash')));
-    await tester.pumpAndSettle();
-    for (var q = 0; q < dash.questionCount; q++) {
-      final dashState =
-          tester.state<MathDashScreenState>(find.byType(MathDashScreen));
-      final correctIndex = dashState.currentQuestion.correctIndex;
-      await tester.tap(find.byKey(ValueKey('option_$correctIndex')));
-      await tester.pumpAndSettle();
-    }
-    await tester.tap(find.text('Next!'));
-    await tester.pumpAndSettle();
-
-    final challenge = quest.challenges[1] as MemoryChallenge;
-    await tester.tap(find.byKey(const ValueKey('memory_ready')));
-    await tester.pumpAndSettle();
+    final challenge = JungleQuests.all
+        .firstWhere((q) => q.id == 'treehouse_ladder')
+        .challenges
+        .first;
     final wrongIndex =
         (challenge.correctIndex + 1) % challenge.options.length;
 

@@ -34,11 +34,11 @@ import '../player/hero_avatar_preview.dart';
 ///
 /// Two ways to play (brief: adventure integration):
 /// - **Standalone** (from Mini-Games): [sessionLength] questions,
-///   rewards decided by [QuestRewardService.calculateMathDash] and paid
+///   rewards decided by [QuestRewardService.calculateMiniGameSession] and paid
 ///   out here.
 /// - **Embedded in a quest** ([embedded] true, launched by
 ///   `QuestPlayScreen` for a [MathDashChallenge]): on completion the
-///   screen pops with a [MathDashResult] instead of showing results —
+///   screen pops with a [MiniGameSessionResult] instead of showing results —
 ///   the quest's own rewards cover the payout, so nothing double-pays.
 class MathDashScreen extends StatefulWidget {
   const MathDashScreen({
@@ -173,7 +173,7 @@ class MathDashScreenState extends State<MathDashScreen> {
     if (widget.embedded) {
       // Report back to the quest — its own completion pays the rewards.
       _feedbackService.play(SoundEvent.correct);
-      Navigator.of(context).pop(MathDashResult(
+      Navigator.of(context).pop(MiniGameSessionResult(
         completed: true,
         correctAnswers: _score,
         totalQuestions: widget.sessionLength,
@@ -185,7 +185,7 @@ class MathDashScreenState extends State<MathDashScreen> {
       return;
     }
 
-    final reward = QuestRewardService.calculateMathDash(
+    final reward = QuestRewardService.calculateMiniGameSession(
       correctAnswers: _score,
       totalQuestions: widget.sessionLength,
       bestStreak: _bestStreak,
@@ -472,7 +472,7 @@ class _IntroView extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Solve $sessionLength number puzzles! Get '
-          '${QuestRewardService.mathDashStarThreshold(sessionLength)} right '
+          '${QuestRewardService.sessionStarThreshold(sessionLength)} right '
           'on the first try to earn a ⭐',
           textAlign: TextAlign.center,
           style: textTheme.bodyLarge,

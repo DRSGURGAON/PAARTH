@@ -4,16 +4,17 @@ import '../../core/audio/feedback_service.dart';
 import '../../core/audio/sound_event.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/models/mini_game_result.dart';
 import '../../game/models/quest.dart';
 import '../../game/repositories/coin_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/repositories/quest_progress_repository.dart';
-import '../../game/models/mini_game_result.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/shake_widget.dart';
 import '../mini_games/math_dash_screen.dart';
+import '../mini_games/memory_master_screen.dart';
 import 'quest_complete_screen.dart';
 import 'quest_resolution_screen.dart';
 
@@ -116,17 +117,13 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
     }
   }
 
-  /// Runs an embedded Math Dash session for [challenge]; a completed
-  /// session counts as this challenge's correct answer. Backing out
-  /// mid-session leaves the challenge current — nothing is lost.
-  Future<void> _launchMathDash(MathDashChallenge challenge) async {
-    final result = await Navigator.of(context).push<MathDashResult>(
-      MaterialPageRoute<MathDashResult>(
-        builder: (_) => MathDashScreen(
-          embedded: true,
-          sessionLength: challenge.questionCount,
-        ),
-      ),
+  /// Runs an embedded mini-game session ([screen]) for [challenge]; a
+  /// completed session counts as this challenge's correct answer.
+  /// Backing out mid-session leaves the challenge current — nothing is
+  /// lost.
+  Future<void> _launchMiniGame(QuestChallenge challenge, Widget screen) async {
+    final result = await Navigator.of(context).push<MiniGameSessionResult>(
+      MaterialPageRoute<MiniGameSessionResult>(builder: (_) => screen),
     );
     if (!mounted) return;
     if (result != null && result.completed) {
@@ -184,13 +181,42 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: challenge is MathDashChallenge
-              ? _MathDashLauncher(
-                  challenge: challenge,
+              ? _MiniGameLauncher(
+                  emoji: '🔢',
+                  prompt: challenge.prompt,
+                  buttonKey: const ValueKey('play_math_dash'),
+                  buttonLabel: 'Play Math Dash!',
+                  buttonIcon: Icons.calculate_rounded,
                   progress: _ProgressDots(
                     total: widget.quest.challenges.length,
                     current: _engine.currentIndex,
                   ),
-                  onPlay: () => _launchMathDash(challenge),
+                  onPlay: () => _launchMiniGame(
+                    challenge,
+                    MathDashScreen(
+                      embedded: true,
+                      sessionLength: challenge.questionCount,
+                    ),
+                  ),
+                )
+              : challenge is MemoryMasterChallenge
+              ? _MiniGameLauncher(
+                  emoji: '🧠',
+                  prompt: challenge.prompt,
+                  buttonKey: const ValueKey('play_memory_master'),
+                  buttonLabel: 'Play Memory Master!',
+                  buttonIcon: Icons.psychology_rounded,
+                  progress: _ProgressDots(
+                    total: widget.quest.challenges.length,
+                    current: _engine.currentIndex,
+                  ),
+                  onPlay: () => _launchMiniGame(
+                    challenge,
+                    MemoryMasterScreen(
+                      embedded: true,
+                      sessionLength: challenge.questionCount,
+                    ),
+                  ),
                 )
               : _studying && challenge is MemoryChallenge
               ? _StudyPhase(
@@ -271,16 +297,24 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
   }
 }
 
-/// Story framing plus one big button for a quest-embedded Math Dash
+/// Story framing plus one big button for a quest-embedded mini-game
 /// session — the child plays the real mini-game, not a copy of it.
-class _MathDashLauncher extends StatelessWidget {
-  const _MathDashLauncher({
-    required this.challenge,
+class _MiniGameLauncher extends StatelessWidget {
+  const _MiniGameLauncher({
+    required this.emoji,
+    required this.prompt,
+    required this.buttonKey,
+    required this.buttonLabel,
+    required this.buttonIcon,
     required this.progress,
     required this.onPlay,
   });
 
-  final MathDashChallenge challenge;
+  final String emoji;
+  final String prompt;
+  final Key buttonKey;
+  final String buttonLabel;
+  final IconData buttonIcon;
   final Widget progress;
   final VoidCallback onPlay;
 
@@ -291,19 +325,19 @@ class _MathDashLauncher extends StatelessWidget {
       children: [
         progress,
         const Spacer(),
-        const Text('🔢', textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 56)),
+        Text(emoji,
+            textAlign: TextAlign.center, style: const TextStyle(fontSize: 56)),
         const SizedBox(height: 16),
         Text(
-          challenge.prompt,
+          prompt,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         const Spacer(),
         BigRoundedButton(
-          key: const ValueKey('play_math_dash'),
-          label: 'Play Math Dash!',
-          icon: Icons.calculate_rounded,
+          key: buttonKey,
+          label: buttonLabel,
+          icon: buttonIcon,
           backgroundColor: AppColors.skyBlue,
           onPressed: onPlay,
         ),

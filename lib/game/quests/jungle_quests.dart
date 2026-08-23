@@ -48,13 +48,10 @@ class JungleQuests {
           questionCount: 3,
           rewardLabel: 'Bridge Piece #1',
         ),
-        MemoryChallenge(
-          studyPrompt: 'Remember these jungle friends!',
-          itemsToRemember: '🐒 🐼 🦊 🐰',
-          prompt: 'Which animals did you see?',
-          options: ['🐒 🐼 🦊 🐰', '🐒 🐼 🦁 🐰', '🐒 🦊 🐸 🐰'],
-          correctIndex: 0,
-          hint: 'One row has exactly the friends you met!',
+        MemoryMasterChallenge(
+          prompt: 'The jungle friends are hiding! Remember who you see '
+              'to earn the repair tool.',
+          questionCount: 3,
           rewardLabel: 'Repair Tool',
         ),
         ChoiceChallenge(

@@ -465,6 +465,49 @@ existing mini-game rather than replacing it:
 - Same honest limit: no Flutter SDK available here — not compiled,
   analyzed, or run; Phase 13's note still applies in full
 
+**Phase 5 redesign** — Memory Master was likewise deepened against a
+more detailed brief ("Remember it. Find it. Win it!"), reworking the
+existing mini-game rather than replacing it:
+- **Jungle scene content** (`MemoryObjects`): 7 named friends (monkey,
+  panda, fox, rabbit, parrot, frog, butterfly) placed at 7 named scene
+  spots (by the tree, on the rock, at the waterfall, …), each shown as
+  a little diorama card — discovering things in the jungle, not cards
+  on a worksheet. Defined once; real art can replace emoji in one file
+- **Question types rebuilt around the brief's headline pair**:
+  *object recall* ("Which one did you see?" — decoys genuinely
+  unseen) and *position recall* ("Where was the panda?" — answered
+  with named spots a child can picture, not slot numbers), generated
+  most often; missing-object, who-came-next, and how-many rounds add
+  occasional variety. Items follow the spec: 3 at level 1, 4 at level
+  2, 5 from level 3 (capped so decoys always exist; top levels trim
+  study time slightly instead)
+- **Observation phase**: "👀 Watch carefully!" with a soft animated
+  fill bar — no numeric countdown anywhere; Panda's 1.5× extra-time
+  companion help unchanged. A superseded-timer token keeps stale
+  study timers from ever advancing a newer round
+- **A real memory hint**: after a miss, a once-per-round "Look again"
+  button replays a shorter peek at the scene, then returns to the same
+  question — help that teaches looking carefully, never the answer
+- **HUD + streak**: ⭐ score, 🧠 streak (from 2 remembered in a row),
+  N / 5 progress — same layout and reset-only-the-streak behavior as
+  Math Dash
+- **Rewards and results through the shared services**: the Math Dash
+  payout rule was generalized (`calculateMiniGameSession`,
+  `MiniGameSessionResult`) and Memory Master reports into it — one
+  payout rule, zero duplicated streak/reward logic
+- **Quest integration**: new `MemoryMasterChallenge` embeds a session
+  in any quest, same contract as `MathDashChallenge`; the bridge
+  quest's memory moment is now a real 3-round embedded session. The
+  authored `MemoryChallenge` type remains a supported one-off authoring
+  option (covered by its own widget test)
+- Tests: generator rework (distinct animals/spots, decoys genuinely
+  unseen, position answers name the real spot, spec item counts, study
+  timing), Look-again flow, streak chip, embedded pop-with-result and
+  no-double-pay, and the full-flow widget test now plays both embedded
+  sessions inside the bridge quest
+- Same honest limit: no Flutter SDK available here — not compiled,
+  analyzed, or run; Phase 13's note still applies in full
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -515,8 +558,9 @@ iOS support is architected for but not built yet — see the brief).
    in short dialogue lines (Next to advance, Skip to jump ahead), then
    **Start Adventure** → 3 challenges: an embedded 3-question **Math
    Dash** session ("The monkey needs bananas for the jungle camp!" →
-   Play Math Dash!), a remember-the-jungle-friends memory round (study
-   as long as you like, then "I'm ready!"), and a magical-lock pattern.
+   Play Math Dash!), an embedded 3-round **Memory Master** session
+   ("The jungle friends are hiding!" → Play Memory Master!), and a
+   magical-lock pattern.
    A wrong answer shows encouragement ("Almost! Let's try again!") plus
    a gentle 💡 hint and lets you retry; each solved challenge awards a
    story item (Bridge Piece #1, Repair Tool, Bridge Piece #2). Then the
@@ -549,9 +593,14 @@ iOS support is architected for but not built yet — see the brief).
    streak earns bonus coins). Answer 3 in a row correctly across
    sessions and the questions quietly get harder; struggle and they
    ease off.
-10. Back at Mini-Games, try **Memory Master**: watch the emoji shown,
-    they disappear, then answer a question about them (position/order/
-    what you saw/how many). 4 of 5 first-try correct earns a ⭐.
+10. Back at Mini-Games, try **Memory Master** ("Remember it. Find it.
+    Win it!"): jungle friends appear at named scene spots (🐒 by the
+    tree, 🐼 on the rock…) with a soft progress bar — no numeric
+    countdown — then hide. Questions ask which one you saw, where the
+    panda was, who you did NOT see, who came next, or how many. The HUD
+    shows ⭐ score, 🧠 streak, and N / 5. A miss offers a once-per-round
+    "Look again" peek at the scene. 4 of 5 first-try correct earns a ⭐
+    (streak bonuses add coins, same payout rule as Math Dash).
 11. Try **Pattern Power**: a repeating emoji pattern with a "❓" at the
     end — tap what comes next. 6 of 8 first-try correct earns a ⭐.
 12. Try **Word Builder**: an emoji (e.g. 🐶) with scrambled letter

@@ -27,10 +27,11 @@ class QuestRewardService {
   static const int perfectCoins = 50;
   static const int coinsWithRetries = 35;
 
-  /// Math Dash payout constants: the star needs ~80% first-try correct;
-  /// coins are modest next to quest payouts (a session is much shorter
-  /// than a quest); streaks add a small bonus, never a penalty.
-  static const int mathDashCoins = 5;
+  /// Mini-game session payout constants (Math Dash, Memory Master, and
+  /// any future session-based mini-game): the star needs ~80% first-try
+  /// correct; coins are modest next to quest payouts (a session is much
+  /// shorter than a quest); streaks add a small bonus, never a penalty.
+  static const int sessionCoins = 5;
   static const int streakBonusCoins = 1;
   static const int perfectStreakBonusCoins = 3;
 
@@ -47,16 +48,19 @@ class QuestRewardService {
 
   /// First-try correct answers needed for a session of [totalQuestions]
   /// to earn its star (ceil of 80% — 4 of 5).
-  static int mathDashStarThreshold(int totalQuestions) =>
+  static int sessionStarThreshold(int totalQuestions) =>
       (totalQuestions * 4 + 4) ~/ 5;
 
-  static MiniGameReward calculateMathDash({
+  /// One payout rule for every session-based mini-game — Math Dash and
+  /// Memory Master both report performance here rather than computing
+  /// rewards themselves.
+  static MiniGameReward calculateMiniGameSession({
     required int correctAnswers,
     required int totalQuestions,
     required int bestStreak,
   }) {
-    final earnedStar = correctAnswers >= mathDashStarThreshold(totalQuestions);
-    var coins = earnedStar ? mathDashCoins : 0;
+    final earnedStar = correctAnswers >= sessionStarThreshold(totalQuestions);
+    var coins = earnedStar ? sessionCoins : 0;
     if (bestStreak >= totalQuestions) {
       coins += perfectStreakBonusCoins;
     } else if (bestStreak >= 3) {

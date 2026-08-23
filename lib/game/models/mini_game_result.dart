@@ -1,11 +1,12 @@
-/// The outcome of one Math Dash session, handed back to whoever
-/// launched it — the results screen in standalone play, or the Quest
-/// Engine when a quest embedded the session as a challenge. Pure data;
-/// reward *decisions* live in `QuestRewardService`, and the awarded
-/// fields here only record what was actually paid out (always 0 in
-/// quest-embedded sessions, where the quest's own completion pays).
-class MathDashResult {
-  const MathDashResult({
+/// The outcome of one mini-game session (Math Dash, Memory Master),
+/// handed back to whoever launched it — the results screen in
+/// standalone play, or the Quest Engine when a quest embedded the
+/// session as a challenge. Pure data; reward *decisions* live in
+/// `QuestRewardService`, and the awarded fields here only record what
+/// was actually paid out (always 0 in quest-embedded sessions, where
+/// the quest's own completion pays).
+class MiniGameSessionResult {
+  const MiniGameSessionResult({
     required this.completed,
     required this.correctAnswers,
     required this.totalQuestions,
