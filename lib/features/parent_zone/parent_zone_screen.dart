@@ -252,6 +252,12 @@ class _SettingsSectionState extends State<_SettingsSection> {
     setState(() {});
   }
 
+  Future<void> _setInstrumentSoundsEnabled(bool value) async {
+    await _settings.setInstrumentSoundsEnabled(value);
+    if (!mounted) return;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -274,6 +280,14 @@ class _SettingsSectionState extends State<_SettingsSection> {
           title: const Text('Haptic Feedback'),
           value: _settings.hapticsEnabled,
           onChanged: _setHapticsEnabled,
+        ),
+        SwitchListTile(
+          key: const ValueKey('instrument_sounds_toggle'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Instrument Sounds'),
+          subtitle: const Text('Piano and Guitar notes'),
+          value: _settings.instrumentSoundsEnabled,
+          onChanged: _setInstrumentSoundsEnabled,
         ),
       ],
     );

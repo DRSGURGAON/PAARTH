@@ -550,6 +550,62 @@ reworking the existing mini-game rather than replacing it:
 - Same honest limit: no Flutter SDK available here — not compiled,
   analyzed, or run; Phase 13's note still applies in full
 
+**Phase 8 (activities)** — three independent dashboard activities
+alongside the Adventure (never mixed into the quest sequence): ♟️
+Chess, 🎹 Piano, 🎸 Guitar, all offline, no accounts, no permissions:
+- **Dashboard**: Home gained a 🎮 Activities row of three cards, each
+  with its tagline and a subtle progress caption ("3 games played",
+  "2 songs learned", "4 chords learned") that stays hidden until
+  there's something to say. Adventure remains the primary button
+- **♟️ Chess Club** — a *real* chess engine written in-repo
+  (`lib/game/chess/`): legal move generation for every piece including
+  castling, en passant, and auto-queen promotion; check, checkmate,
+  stalemate, and insufficient-material draws; full undo. Pure Dart,
+  exhaustively unit-tested (fool's mate, pinned pieces, castling
+  through check refused, en passant window closing, ...). Tap a piece
+  → legal moves highlight; tap to move. Three beatable AI levels
+  (random / greedy captures / one-move material lookahead — never
+  UI-blocking), generous 💡 hints powered by the same lookahead, undo
+  takes back your move plus the AI's reply, and match rewards flow
+  through the central reward service (win ⭐⭐⭐ +10🪙, draw ⭐⭐ +6🪙,
+  finishing always pays ⭐ +3🪙 — losing never pays zero). **Learn
+  Chess** teaches each piece with a one-line rule and a real
+  try-it board; **Puzzles** are six engine-judged one-move challenges
+  (capture / check / checkmate)
+- **🎹 Super Piano** — a one-octave keyboard (8 white + 5 black keys)
+  playing real bundled notes; Free Play with no score and no failure,
+  and **Learn a Song** (a Twinkle-style public-domain melody in our own
+  encoding, plus an original Jungle Song) that highlights the next key
+  and gently redirects wrong taps. First-time song completions pay a
+  small reward; replays stay free
+- **🎸 Super Guitar** — six tappable strings (thicker low strings,
+  shake-on-pluck), a Strum button, and C/G/Am/F chord buttons that
+  re-tune what the strings play (muted strings go quiet); chords tapped
+  for the first time count as learned. **Learn a Song** highlights the
+  next chord of a simple progression; same first-completion reward rule
+- **Audio architecture**: 28 original instrument samples generated *in
+  this repo* by synthesis — additive piano tones and Karplus-Strong
+  plucked-string guitar tones (no recordings, nothing copyrighted) —
+  played through the new `InstrumentSoundService`, the only file that
+  touches the `audioplayers` package. Playback is gated by a new
+  parent-zone **Instrument Sounds** toggle (plus the master sound
+  switch), never throws, and the activities work fully silent
+- **`ActivityProgress` model + repository**: sessions, achievements,
+  and skill level per activity id — chess difficulty persists as its
+  skill level; future activities (Drawing, Science Lab, ...) reuse the
+  same shape without dashboard changes
+- Tests: the chess engine suite, AI legality/behavior per level,
+  engine-judged puzzle solvability, activity-progress persistence and
+  corruption handling, full play-screen flows (move → AI reply, hint,
+  undo, restart, checkmate → reward), piano key/song/no-double-pay/
+  silent-mode flows, guitar pluck/chord/strum/song flows, and the
+  dashboard cards opening all three activities
+- New dependency: `audioplayers` (isolated behind
+  `InstrumentSoundService`) — the first package added since Phase 1,
+  needed because Flutter has no built-in way to play bundled audio
+- Same honest limit: no Flutter SDK available here — not compiled,
+  analyzed, or run; Phase 13's note still applies in full
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -587,11 +643,13 @@ iOS support is architected for but not built yet — see the brief).
    heroes (varied skin tones, hair, outfits, accessories — no typing, no
    name asked for). **Previous**/**Next** browse, **Select** confirms
    the one showing, **Continue** saves it and moves on.
-4. Continuing goes to **Home**: your hero, ⭐/🪙/🏅 counts, and buttons
-   for Adventure, Mini-Games, Collection, Companions, Room, and
-   **Customize** (the detailed swatch-by-swatch editor, also reachable
-   from the Room — pick skin tone, hair, outfit, shoes, backpack, and an
-   accessory individually).
+4. Continuing goes to **Home**: your hero, ⭐/🪙/🏅 counts, the
+   Adventure Map button, a **🎮 Activities** row (♟️ Chess "Think &
+   Play" · 🎹 Piano "Make Music" · 🎸 Guitar "Play & Learn" — each card
+   opens its own independent activity, with a subtle progress caption
+   once you've played), and buttons for Mini-Games, Collection,
+   Companions, Room, and **Customize** (the detailed swatch-by-swatch
+   editor, also reachable from the Room).
 5. On the **Adventure Map**, both **Tree House** and **Monkey Camp**
    start unlocked; tap Tree House → a list of 2 quests. Locked locations
    show a lock icon, a gentle "Earn N more ⭐" hint on tap (with a small

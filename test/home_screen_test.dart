@@ -55,6 +55,46 @@ void main() {
     expect(find.text('Accessory'), findsOneWidget);
   });
 
+  testWidgets('the Activities section shows Chess, Piano, and Guitar cards '
+      'that each open their own screen', (tester) async {
+    final storage = FakeLocalStorageService();
+
+    await tester.pumpWidget(
+      AppScope(
+        storage: storage,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          onGenerateRoute: AppRouter.generateRoute,
+          home: const HomeScreen(),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('activity_chess')), findsOneWidget);
+    expect(find.byKey(const ValueKey('activity_piano')), findsOneWidget);
+    expect(find.byKey(const ValueKey('activity_guitar')), findsOneWidget);
+    expect(find.text('Think & Play'), findsOneWidget);
+    expect(find.text('Make Music'), findsOneWidget);
+    expect(find.text('Play & Learn'), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('activity_chess')));
+    await tester.tap(find.byKey(const ValueKey('activity_chess')));
+    await tester.pumpAndSettle();
+    expect(find.text('Chess Club'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('activity_piano')));
+    await tester.pumpAndSettle();
+    expect(find.text('Super Piano'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('activity_guitar')));
+    await tester.pumpAndSettle();
+    expect(find.text('Super Guitar'), findsOneWidget);
+  });
+
   testWidgets('the parent-zone entry opens the gate, not the dashboard '
       'directly', (tester) async {
     final storage = FakeLocalStorageService();

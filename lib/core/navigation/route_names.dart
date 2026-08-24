@@ -16,4 +16,7 @@ class RouteNames {
   static const String shop = '/shop';
   static const String parentGate = '/parent-gate';
   static const String parentZone = '/parent-zone';
+  static const String chess = '/chess';
+  static const String piano = '/piano';
+  static const String guitar = '/guitar';
 }

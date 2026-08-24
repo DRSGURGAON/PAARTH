@@ -11,9 +11,16 @@ class SettingsRepository {
 
   static const String _soundEnabledKey = 'settings_sound_enabled_v1';
   static const String _hapticsEnabledKey = 'settings_haptics_enabled_v1';
+  static const String _instrumentSoundsKey = 'settings_instrument_sounds_v1';
 
   bool get soundEnabled => _storage.getBool(_soundEnabledKey) ?? true;
   bool get hapticsEnabled => _storage.getBool(_hapticsEnabledKey) ?? true;
+
+  /// Piano/Guitar note playback (Phase 8 activities). Separate from
+  /// effect sounds so a parent can silence instruments while keeping
+  /// gameplay feedback, or vice versa.
+  bool get instrumentSoundsEnabled =>
+      _storage.getBool(_instrumentSoundsKey) ?? true;
 
   Future<void> setSoundEnabled(bool enabled) {
     return _storage.setBool(_soundEnabledKey, enabled);
@@ -21,5 +28,9 @@ class SettingsRepository {
 
   Future<void> setHapticsEnabled(bool enabled) {
     return _storage.setBool(_hapticsEnabledKey, enabled);
+  }
+
+  Future<void> setInstrumentSoundsEnabled(bool enabled) {
+    return _storage.setBool(_instrumentSoundsKey, enabled);
   }
 }

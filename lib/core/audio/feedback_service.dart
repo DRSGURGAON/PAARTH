@@ -8,17 +8,15 @@ import 'sound_event.dart';
 /// child's saved [SettingsRepository] preferences (checked live on
 /// every call, so a toggle in Parent Zone takes effect immediately).
 ///
-/// **What this deliberately is not**: composed music or custom sound
-/// effects. No production audio assets exist in this repo yet (see the
-/// README's Assets section) and this sandbox has no way to author or
-/// license real ones, so building an asset-based audio player here
-/// would be exactly the kind of fake functionality the project rules
-/// out — a player pointed at files that don't exist. Instead this uses
-/// Flutter's own built-in, asset-free feedback: [SystemSound] (a short
-/// native click/alert) and [HapticFeedback] (a real device vibration).
-/// It's genuine, working feedback today, and the one-line [play] call
-/// at every use site means swapping in real asset-based sound later
-/// (e.g. via `audioplayers`) only means changing this one class.
+/// **What this deliberately is not**: composed music or custom effect
+/// recordings. UI feedback stays on Flutter's built-in, asset-free
+/// channels — [SystemSound] (a short native click/alert) and
+/// [HapticFeedback] (a real device vibration) — genuine, working
+/// feedback with nothing faked. (The Piano/Guitar activities *do* play
+/// real bundled samples, but those are synthesized instrument notes
+/// handled by the separate `InstrumentSoundService`; swapping this
+/// class's effects to asset-based audio later would follow the same
+/// pattern and touch only this file.)
 class FeedbackService {
   FeedbackService(
     LocalStorageService storage, {

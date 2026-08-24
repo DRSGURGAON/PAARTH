@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../features/activities/chess/chess_screen.dart';
+import '../../features/activities/guitar/guitar_screen.dart';
+import '../../features/activities/piano/piano_screen.dart';
 import '../../features/adventure_map/adventure_map_screen.dart';
 import '../../features/collection/collection_screen.dart';
 import '../../features/companions/companion_select_screen.dart';
@@ -46,6 +49,12 @@ class AppRouter {
         return _pageRoute(const RoomScreen(), settings);
       case RouteNames.shop:
         return _pageRoute(const ShopScreen(), settings);
+      case RouteNames.chess:
+        return _pageRoute(const ChessScreen(), settings);
+      case RouteNames.piano:
+        return _pageRoute(const PianoScreen(), settings);
+      case RouteNames.guitar:
+        return _pageRoute(const GuitarScreen(), settings);
       case RouteNames.parentGate:
         return _pageRoute(const ParentGateScreen(), settings);
       case RouteNames.parentZone:

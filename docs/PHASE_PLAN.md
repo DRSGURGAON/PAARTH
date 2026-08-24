@@ -17,6 +17,16 @@ clean, `flutter test` green) before the next begins.
 - [x] **Phase 12** — Polish: animations + sound
 - [x] **Phase 13** — Testing + Android release build
 
+Post-V1 redesign phases (deepening shipped areas against more detailed
+briefs; see the README's redesign sections):
+
+- [x] **Phase 2 redesign** — preset hero creation, skin tones, 6-location map
+- [x] **Phase 3 redesign** — story dialogue, tiered rewards, mid-quest resume
+- [x] **Phase 4 redesign** — Math Dash: visual objects, streaks, hints, quest embedding
+- [x] **Phase 5 redesign** — Memory Master: jungle scenes, recall types, look-again
+- [x] **Phase 6 redesign** — Pattern Power: themed patterns, structure ladder, lock
+- [x] **Phase 8 (activities)** — dashboard Chess + Piano + Guitar
+
 V1 scope, as actually shipped: **Jungle Adventure only**, fully playable
 (6 locations after the post-V1 Phase 2 redesign added Mountain — 10
 quests across the 5 locations that have quest content, Mountain's not

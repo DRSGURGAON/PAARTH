@@ -18,6 +18,12 @@ dependencies:
   # swapped later without touching game code.
   shared_preferences: ^2.2.3
 
+  # Plays the bundled instrument note samples (Piano / Guitar
+  # activities). Wrapped behind core/audio/instrument_sound_service.dart
+  # so no widget depends on the package directly and it could be swapped
+  # for another audio backend in one file.
+  audioplayers: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -25,3 +31,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Original synthesized instrument samples (see tool/gen_audio notes in
+  # the README): additive-synthesis piano tones and Karplus-Strong
+  # plucked-string guitar tones. No third-party or copyrighted audio.
+  assets:
+    - assets/audio/piano/
+    - assets/audio/guitar/

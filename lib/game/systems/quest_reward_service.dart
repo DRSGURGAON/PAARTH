@@ -68,4 +68,22 @@ class QuestRewardService {
     }
     return MiniGameReward(stars: earnedStar ? 1 : 0, coins: coins);
   }
+
+  /// Chess Club match payout (activities brief section 11): win ⭐⭐⭐,
+  /// draw ⭐⭐, and finishing a match always pays ⭐ — losing never pays
+  /// zero, because playing a whole game *is* the learning.
+  static MiniGameReward calculateChessMatch({
+    required bool won,
+    required bool drawn,
+  }) {
+    if (won) return const MiniGameReward(stars: 3, coins: 10);
+    if (drawn) return const MiniGameReward(stars: 2, coins: 6);
+    return const MiniGameReward(stars: 1, coins: 3);
+  }
+
+  /// First-time completion of a Piano/Guitar song (activities brief
+  /// section 17). Replays stay free-play fun with no farming loop —
+  /// callers award this only when the song achievement is newly earned.
+  static const MiniGameReward songCompletionReward =
+      MiniGameReward(stars: 1, coins: 3);
 }
