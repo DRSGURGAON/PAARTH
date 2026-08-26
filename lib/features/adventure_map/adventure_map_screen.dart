@@ -387,6 +387,7 @@ class _HeroMarker extends StatelessWidget {
         child: ClipOval(
           child: FittedBox(
             fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
             child: HeroAvatarPreview(profile: profile, size: 90),
           ),
         ),

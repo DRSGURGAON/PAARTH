@@ -104,15 +104,20 @@ class GuitarScreenState extends State<GuitarScreen> {
     if (note != null) _sound.playNote('guitar', note);
   }
 
-  /// Strums every sounding string of the current chord together.
+  /// Strums the current chord low string to high with a real strum's
+  /// slight roll (~35ms between strings) — sounds natural and avoids
+  /// firing six samples in the same audio frame.
   void _strum() {
-    setState(() {
-      for (var i = 0; i < 6; i++) {
-        _stringShakes[i]++;
+    for (var i = 0; i < 6; i++) {
+      final stringIndex = i;
+      if (stringIndex == 0) {
+        _pluckString(stringIndex);
+        continue;
       }
-    });
-    for (final note in _stringNotes) {
-      if (note != null) _sound.playNote('guitar', note);
+      Future.delayed(Duration(milliseconds: 35 * stringIndex), () {
+        if (!mounted) return;
+        _pluckString(stringIndex);
+      });
     }
   }
 

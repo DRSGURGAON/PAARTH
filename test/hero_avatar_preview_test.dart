@@ -7,7 +7,13 @@ import 'package:super_kid_adventure/game/models/hero_profile.dart';
 import 'package:super_kid_adventure/game/models/shop_item.dart';
 
 void main() {
-  testWidgets('a hero profile with a chosen skin tone renders that '
+  HeroAvatarPainter painterOf(WidgetTester tester) {
+    final paint = tester.widget<CustomPaint>(
+        find.byKey(const ValueKey('hero_painter')));
+    return paint.painter! as HeroAvatarPainter;
+  }
+
+  testWidgets('a hero profile with a chosen skin tone paints that '
       "tone's real color, not a hardcoded default", (tester) async {
     final deepestTone = HeroCustomizationCatalog.skinToneOptions.last;
     final profile = HeroProfile.initial().copyWith(skinToneId: deepestTone.id);
@@ -16,13 +22,7 @@ void main() {
       MaterialApp(home: HeroAvatarPreview(profile: profile)),
     );
 
-    final containerColors = tester
-        .widgetList<Container>(find.byType(Container))
-        .where((c) => c.decoration is BoxDecoration)
-        .map((c) => (c.decoration as BoxDecoration).color)
-        .toList();
-
-    expect(containerColors, contains(deepestTone.color));
+    expect(painterOf(tester).skinColor, deepestTone.color);
   });
 
   testWidgets('an accessory renders its emoji, and "None" renders nothing',
@@ -40,11 +40,11 @@ void main() {
     expect(find.text('🧣'), findsNothing);
   });
 
-  /// A regression check for the bug this screen used to have: resolving
+  /// A regression check for the bug this widget used to have: resolving
   /// a profile's option id only against the free `HeroCustomizationCatalog`
   /// list meant an equipped *shop* item silently rendered as whatever the
   /// first free option happened to be, instead of its own real color.
-  testWidgets('a hero profile referencing a purchased shop color renders '
+  testWidgets('a hero profile referencing a purchased shop color paints '
       "that item's real color, not the first free option's",
       (tester) async {
     final shopHair = ShopCatalog.itemsFor(ShopCategory.hair).first;
@@ -60,16 +60,32 @@ void main() {
       MaterialApp(home: HeroAvatarPreview(profile: profile)),
     );
 
-    final containerColors = tester
-        .widgetList<Container>(find.byType(Container))
-        .where((c) => c.decoration is BoxDecoration)
-        .map((c) => (c.decoration as BoxDecoration).color)
-        .toList();
+    expect(painterOf(tester).hairColor, shopHair.color);
+  });
 
-    // The hair swatch is built last (see HeroAvatarPreview's Stack order:
-    // backpack, 2 shoes, body, head, hair), so it's the final Container.
-    // Comparing only this one avoids false negatives from other slots'
-    // free-default colors coincidentally matching the buggy fallback.
-    expect(containerColors.last, shopHair.color);
+  testWidgets('every customization slot reaches its painted color',
+      (tester) async {
+    final profile = HeroProfile(
+      skinToneId: HeroCustomizationCatalog.skinToneOptions[2].id,
+      hairOptionId: HeroCustomizationCatalog.hairOptions[1].id,
+      outfitOptionId: HeroCustomizationCatalog.outfitOptions[2].id,
+      shoesOptionId: HeroCustomizationCatalog.shoesOptions[3].id,
+      backpackOptionId: HeroCustomizationCatalog.backpackOptions[1].id,
+      accessoryId: 'none',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: HeroAvatarPreview(profile: profile)),
+    );
+
+    final painter = painterOf(tester);
+    expect(painter.skinColor,
+        HeroCustomizationCatalog.skinToneOptions[2].color);
+    expect(painter.hairColor, HeroCustomizationCatalog.hairOptions[1].color);
+    expect(painter.outfitColor,
+        HeroCustomizationCatalog.outfitOptions[2].color);
+    expect(painter.shoesColor, HeroCustomizationCatalog.shoesOptions[3].color);
+    expect(painter.backpackColor,
+        HeroCustomizationCatalog.backpackOptions[1].color);
   });
 }

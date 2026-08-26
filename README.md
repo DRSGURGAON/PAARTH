@@ -603,6 +603,17 @@ Chess, 🎹 Piano, 🎸 Guitar, all offline, no accounts, no permissions:
 - New dependency: `audioplayers` (isolated behind
   `InstrumentSoundService`) — the first package added since Phase 1,
   needed because Flutter has no built-in way to play bundled audio
+- *Post-release fixes from device testing*: intermittent guitar/piano
+  audio traced to creating a fresh `AudioPlayer` per tap (native player
+  exhaustion under fast play) — playback now goes through cached
+  per-note `AudioPool`s with warm voices; guitar strums roll low-to-high
+  with a ~35ms stagger and the guitar samples were regenerated quieter
+  so full strums mix without clipping. The hero avatar was also
+  upgraded from the placeholder paper-doll to a painted vector cartoon
+  kid (`HeroAvatarPainter`): scalloped hair fringe, real face (eyes
+  with sparkle, smile, blush), ears, arms with sleeves and hands,
+  backpack straps, and shoes with toes — still fully driven by the same
+  profile colors everywhere the hero appears
 - Same honest limit: no Flutter SDK available here — not compiled,
   analyzed, or run; Phase 13's note still applies in full
 

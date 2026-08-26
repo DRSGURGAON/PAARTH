@@ -33,8 +33,15 @@ void main() {
     );
   }
 
-  testWidgets('plucking a string sounds its open note and strumming sounds '
-      'them all', (tester) async {
+  /// Lets a strum's staggered string roll (up to ~175ms of timers)
+  /// finish before asserting.
+  Future<void> settleStrum(WidgetTester tester) async {
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('plucking a string sounds its open note and strumming rolls '
+      'through them all', (tester) async {
     await tester.pumpWidget(buildHarness());
 
     await tester.tap(find.byKey(const ValueKey('guitar_string_0')));
@@ -43,7 +50,7 @@ void main() {
 
     played.clear();
     await tester.tap(find.byKey(const ValueKey('guitar_strum')));
-    await tester.pumpAndSettle();
+    await settleStrum(tester);
     expect(played.length, 6);
     expect(played, contains('audio/guitar/e4.wav'));
   });
@@ -53,7 +60,7 @@ void main() {
     await tester.pumpWidget(buildHarness());
 
     await tester.tap(find.byKey(const ValueKey('guitar_chord_c')));
-    await tester.pumpAndSettle();
+    await settleStrum(tester);
 
     // Selecting auto-strums the chord: 5 sounding strings for C.
     expect(played.length, 5);
@@ -91,14 +98,14 @@ void main() {
 
     // Wrong chord: no advance, gentle pointer.
     await tester.tap(find.byKey(const ValueKey('guitar_chord_g')));
-    await tester.pumpAndSettle();
+    await settleStrum(tester);
     expect(find.textContaining('Chord 1 of ${song.chords.length}'),
         findsOneWidget);
     expect(find.textContaining('try the glowing chord'), findsOneWidget);
 
     for (final chordId in song.chords) {
       await tester.tap(find.byKey(ValueKey('guitar_chord_$chordId')));
-      await tester.pumpAndSettle();
+      await settleStrum(tester);
     }
 
     expect(find.byKey(const ValueKey('guitar_song_complete')), findsOneWidget);
@@ -119,7 +126,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('guitar_string_0')));
     await tester.tap(find.byKey(const ValueKey('guitar_strum')));
-    await tester.pumpAndSettle();
+    await settleStrum(tester);
 
     expect(played, isEmpty);
   });
