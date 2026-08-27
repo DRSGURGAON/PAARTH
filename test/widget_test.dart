@@ -24,8 +24,9 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 3));
   }
 
-  /// PLAY → pick a preset hero → Continue → Adventure Map (shared start
-  /// of every flow).
+  /// PLAY → pick a preset hero → Continue → Adventure Map → the Jungle
+  /// world (shared start of every flow). The Adventure Map button opens
+  /// the world-select screen first; the jungle card leads to its map.
   Future<void> reachAdventureMap(WidgetTester tester) async {
     await tester.tap(find.text('PLAY'));
     await tester.pumpAndSettle();
@@ -34,6 +35,8 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Adventure Map'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('world_jungle_adventure')));
     await tester.pumpAndSettle();
   }
 
@@ -69,6 +72,14 @@ void main() {
     expect(find.text('Ready for adventure?'), findsOneWidget);
     expect(find.text('0'), findsNWidgets(3));
     await tester.tap(find.text('Adventure Map'));
+    await tester.pumpAndSettle();
+
+    // World select: the jungle is open from the start, the other four
+    // worlds honestly locked behind their star thresholds.
+    expect(find.text('Adventure Worlds'), findsOneWidget);
+    expect(find.text('Jungle Adventure'), findsOneWidget);
+    expect(find.text('20 more ⭐ to unlock'), findsOneWidget); // Space
+    await tester.tap(find.byKey(const ValueKey('world_jungle_adventure')));
     await tester.pumpAndSettle();
 
     // Adventure Map: both starter locations unlocked, later ones locked.

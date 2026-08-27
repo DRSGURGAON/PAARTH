@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../models/badge.dart';
+import '../models/quest.dart';
+import '../quests/dino_quests.dart';
 import '../quests/jungle_quests.dart';
+import '../quests/magic_quests.dart';
+import '../quests/robot_quests.dart';
+import '../quests/space_quests.dart';
 import '../repositories/mini_game_repository.dart';
 
 /// Everything a badge's earned-condition might need to check. Plain
@@ -28,6 +33,13 @@ class _BadgeDefinition {
   final bool Function(BadgeStats stats) isEarned;
 }
 
+/// True when every quest in [quests] is in the completed set — each
+/// world's explorer badge checks its own quest ids, never a bare
+/// count, so finishing 13 quests scattered across worlds can't earn
+/// the wrong world's badge.
+bool _completedAll(BadgeStats stats, List<Quest> quests) =>
+    quests.every((quest) => stats.completedQuestIds.contains(quest.id));
+
 /// The full set of V1 badges and the (deterministic, non-random)
 /// condition that earns each one. Earned status is never stored — it's
 /// recomputed from real progress every time, so a badge can never say
@@ -52,7 +64,43 @@ class BadgeCatalog {
         description: 'Complete every quest in Jungle Adventure.',
         icon: Icons.forest_rounded,
       ),
-      (stats) => stats.completedQuestIds.length >= JungleQuests.all.length,
+      (stats) => _completedAll(stats, JungleQuests.all),
+    ),
+    _BadgeDefinition(
+      const GameBadge(
+        id: 'space_explorer',
+        name: 'Space Explorer',
+        description: 'Complete every quest in Space Mission.',
+        icon: Icons.rocket_launch_rounded,
+      ),
+      (stats) => _completedAll(stats, SpaceQuests.all),
+    ),
+    _BadgeDefinition(
+      const GameBadge(
+        id: 'dino_explorer',
+        name: 'Dino Explorer',
+        description: 'Complete every quest on Dino Island.',
+        icon: Icons.pets_rounded,
+      ),
+      (stats) => _completedAll(stats, DinoQuests.all),
+    ),
+    _BadgeDefinition(
+      const GameBadge(
+        id: 'magic_explorer',
+        name: 'Magic Explorer',
+        description: 'Complete every quest in Magic Kingdom.',
+        icon: Icons.castle_rounded,
+      ),
+      (stats) => _completedAll(stats, MagicQuests.all),
+    ),
+    _BadgeDefinition(
+      const GameBadge(
+        id: 'robot_explorer',
+        name: 'Robot Explorer',
+        description: 'Complete every quest in Robot City.',
+        icon: Icons.smart_toy_rounded,
+      ),
+      (stats) => _completedAll(stats, RobotQuests.all),
     ),
     _BadgeDefinition(
       const GameBadge(
@@ -98,6 +146,15 @@ class BadgeCatalog {
         icon: Icons.search_rounded,
       ),
       (stats) => stats.miniGameStarIds.contains(MiniGameIds.findDiscover),
+    ),
+    _BadgeDefinition(
+      const GameBadge(
+        id: 'lightning_kid',
+        name: 'Lightning Kid',
+        description: 'Earn a star in Quick Challenge.',
+        icon: Icons.bolt_rounded,
+      ),
+      (stats) => stats.miniGameStarIds.contains(MiniGameIds.quickChallenge),
     ),
     _BadgeDefinition(
       const GameBadge(

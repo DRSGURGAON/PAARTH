@@ -1,9 +1,10 @@
 import '../models/quest.dart';
 
 /// All Jungle Adventure quest content — data only, no UI. Two quests per
-/// location (Mountain excepted — see JungleWorld), 3 challenges each,
-/// aimed at Class 2 / age ~7 (addition and subtraction within 20,
-/// simple patterns and sequences, picture words).
+/// location (the Jungle Temple adds a third: the world-boss quest),
+/// 3 challenges each (4 for the boss), aimed at Class 2 / age ~7
+/// (addition and subtraction within 20, simple patterns and sequences,
+/// picture words).
 ///
 /// Star economy: each quest's base reward is 2 stars (a perfect run
 /// earns a bonus — see QuestRewardService), and every location's
@@ -317,6 +318,84 @@ class JungleQuests {
       ],
     ),
 
+    // ── Mountain ───────────────────────────────────────
+    Quest(
+      id: 'eagle_delivery',
+      locationId: 'mountain',
+      title: "The Eagle's Delivery",
+      npc: QuestNpc(name: 'Ela the Eagle', emoji: '🦅'),
+      storyIntro: 'Ela the Eagle must deliver berries to the mountain top, '
+          'but the wind mixed up her baskets! Help her sort them out.',
+      storyOutro: 'Ela soars to the top and delivers every basket. '
+          'She gives you a feather of honor!',
+      starReward: 2,
+      challenges: [
+        ChoiceChallenge(
+          category: ChallengeCategory.math,
+          prompt: 'Ela has 9 berries. She delivers 4. How many are left?',
+          visual: '🫐🫐🫐🫐🫐🫐🫐🫐🫐',
+          options: ['4', '5', '6'],
+          correctIndex: 1,
+          hint: 'Count all 9, then take 4 away!',
+          rewardLabel: 'Berry Basket',
+        ),
+        ChoiceChallenge(
+          category: ChallengeCategory.logic,
+          prompt: 'What comes next?',
+          visual: '🦅 ⛰️ ⛰️ 🦅 ⛰️ ⛰️ 🦅 ❓',
+          options: ['⛰️', '🦅', '🌲'],
+          correctIndex: 0,
+          hint: 'Eagle, mountain, mountain — say it out loud!',
+          rewardLabel: 'Wind Map',
+        ),
+        ChoiceChallenge(
+          category: ChallengeCategory.english,
+          prompt: 'Which word matches the picture?',
+          visual: '🦅',
+          options: ['EAGLE', 'APPLE', 'ANGLE'],
+          correctIndex: 0,
+          hint: 'It starts with E and flies high!',
+          rewardLabel: 'Feather of Honor',
+        ),
+      ],
+    ),
+    Quest(
+      id: 'snowy_summit',
+      locationId: 'mountain',
+      title: 'The Snowy Summit',
+      npc: QuestNpc(name: 'Ela the Eagle', emoji: '🦅'),
+      storyIntro: 'The path to the snowy summit is hidden! Solve the '
+          'mountain puzzles to find the way up.',
+      storyOutro: 'You reach the summit and see the whole jungle below. '
+          'What a view, Super Kid!',
+      starReward: 2,
+      challenges: [
+        ChoiceChallenge(
+          category: ChallengeCategory.math,
+          prompt: 'Count the snowflakes!',
+          visual: '❄️❄️❄️ ❄️❄️❄️ ❄️❄️',
+          options: ['7', '8', '9'],
+          correctIndex: 1,
+          hint: 'Count them one by one — go slowly!',
+          rewardLabel: 'Snow Boots',
+        ),
+        MathDashChallenge(
+          prompt: 'The mountain steps are numbered! Solve the number '
+              'puzzles to climb higher.',
+          questionCount: 3,
+          rewardLabel: 'Climbing Rope',
+        ),
+        ChoiceChallenge(
+          category: ChallengeCategory.math,
+          prompt: 'Which number is bigger?',
+          options: ['14', '11'],
+          correctIndex: 0,
+          hint: 'Count up — which comes later?',
+          rewardLabel: 'Summit Flag',
+        ),
+      ],
+    ),
+
     // ── Jungle Temple ──────────────────────────────────
     Quest(
       id: 'temple_door_code',
@@ -383,6 +462,68 @@ class JungleQuests {
           options: ['15', '12'],
           correctIndex: 0,
           rewardLabel: 'Star Light',
+        ),
+      ],
+    ),
+    Quest(
+      id: 'jungle_guardian',
+      locationId: 'jungle_temple',
+      title: 'The Jungle Guardian',
+      npc: QuestNpc(name: 'Raja the Guardian Tiger', emoji: '🐯'),
+      storyIntro: 'Raja the Guardian Tiger protects the jungle. Pass his '
+          'four great trials to become a Guardian of the Jungle too!',
+      introDialogue: [
+        'Welcome, brave Super Kid.',
+        'I am Raja, guardian of this jungle.',
+        'Only a true hero can pass my four trials.',
+        'Are you ready to become a Guardian too?',
+      ],
+      storyOutro: 'Raja bows his great head. "You did it, Super Kid! The '
+          'jungle will always be your friend." A new world appears on the '
+          'horizon...',
+      resolutionSteps: [
+        '🐯 Raja watches you finish the last trial...',
+        '🏅 The Guardian Medal glows on your chest!',
+        '🌴 All the jungle animals gather around you!',
+        '🎆 Fireworks of fireflies light up the sky!',
+        '🚀 Far away, a rocket blinks — a new adventure is calling!',
+      ],
+      starReward: 3,
+      challenges: [
+        ChoiceChallenge(
+          category: ChallengeCategory.math,
+          prompt: 'Trial of Numbers: 8 drums + 7 drums. How many drums?',
+          visual: '🥁',
+          options: ['14', '15', '16'],
+          correctIndex: 1,
+          hint: 'Start at 8 and count up 7 more!',
+          rewardLabel: 'Drum of Courage',
+        ),
+        ChoiceChallenge(
+          category: ChallengeCategory.logic,
+          prompt: 'Trial of Patterns: what comes next?',
+          visual: '🐯 🌴 🐯 🌴 🌴 🐯 🌴 🌴 🌴 🐯 ❓',
+          options: ['🌴', '🐯', '⭐'],
+          correctIndex: 0,
+          hint: 'One palm, two palms, three palms... then?',
+          rewardLabel: 'Pattern Paw',
+        ),
+        MemoryChallenge(
+          prompt: 'Who marched past the temple?',
+          itemsToRemember: '🐒 🦁 🦅 🐘',
+          options: ['🐒 🦁 🦅 🐘', '🐒 🦁 🐘 🦅', '🦁 🐒 🦅 🐘'],
+          correctIndex: 0,
+          hint: 'Say their order out loud: monkey, lion, eagle, elephant!',
+          rewardLabel: 'Memory Gem',
+        ),
+        ChoiceChallenge(
+          category: ChallengeCategory.english,
+          prompt: 'Trial of Words: which word matches the picture?',
+          visual: '🐯',
+          options: ['TIGER', 'TOWER', 'TIRE'],
+          correctIndex: 0,
+          hint: 'It starts with TI and roars!',
+          rewardLabel: 'Guardian Medal',
         ),
       ],
     ),

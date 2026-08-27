@@ -5,7 +5,7 @@ import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/duration_formatter.dart';
 import '../../game/models/quest.dart';
-import '../../game/quests/jungle_quests.dart';
+import '../../game/quests/quest_catalog.dart';
 import '../../game/repositories/play_time_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/repositories/settings_repository.dart';
@@ -68,7 +68,7 @@ class ParentZoneScreen extends StatelessWidget {
               icon: Icons.flag_rounded,
               color: AppColors.leafGreen,
               title: 'Quests Completed',
-              value: '$completedQuests of ${JungleQuests.all.length}',
+              value: '$completedQuests of ${QuestCatalog.all.length}',
             ),
             const SizedBox(height: 20),
             Text(

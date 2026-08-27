@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
+import '../../game/models/game_world.dart';
 import '../../game/models/hero_profile.dart';
 import '../../game/models/world_location.dart';
-import '../../game/quests/jungle_quests.dart';
+import '../../game/quests/quest_catalog.dart';
 import '../../game/repositories/hero_repository.dart';
 import '../../game/repositories/progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
@@ -19,14 +20,18 @@ import '../quests/location_quests_screen.dart';
 /// ids, the same "derived, not saved" approach the badge system uses.
 enum _LocationState { locked, unlocked, completed }
 
-/// The Jungle Adventure world map: a small winding trail of location
-/// nodes rather than a static list, each animating in on entry. Locked
-/// nodes show what's needed to open them; unlocked nodes lead to that
-/// location's quest list; completed ones show a check and stars earned.
-/// The child's own hero appears as a small marker at their current
-/// furthest-unlocked location.
+/// One world's map: a small winding trail of location nodes rather
+/// than a static list, each animating in on entry. Locked nodes show
+/// what's needed to open them; unlocked nodes lead to that location's
+/// quest list; completed ones show a check and stars earned. The
+/// child's own hero appears as a small marker at their current
+/// furthest-unlocked location. Which world to draw comes from the
+/// world-select screen; the default keeps the first world for older
+/// call sites and tests.
 class AdventureMapScreen extends StatefulWidget {
-  const AdventureMapScreen({super.key});
+  const AdventureMapScreen({super.key, this.world = JungleWorld.world});
+
+  final GameWorld world;
 
   @override
   State<AdventureMapScreen> createState() => _AdventureMapScreenState();
@@ -40,7 +45,7 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
   /// Bumped per-location to trigger [ShakeWidget]'s gentle "no" shake
   /// when a locked node is tapped (brief section 12).
   late final List<int> _lockShakeSignals =
-      List.filled(JungleWorld.locations.length, 0);
+      List.filled(widget.world.locations.length, 0);
 
   @override
   void initState() {
@@ -49,7 +54,7 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     );
-    _nodeAnimations = List.generate(JungleWorld.locations.length, (index) {
+    _nodeAnimations = List.generate(widget.world.locations.length, (index) {
       final start = index * 0.15;
       final end = (start + 0.5).clamp(0.0, 1.0);
       return CurvedAnimation(
@@ -101,12 +106,12 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
     // The furthest-unlocked location is where the hero marker stands —
     // simple derived "current position," not a separately-tracked one.
     var currentIndex = 0;
-    for (var i = 0; i < JungleWorld.locations.length; i++) {
-      if (JungleWorld.locations[i].isUnlockedFor(stars)) currentIndex = i;
+    for (var i = 0; i < widget.world.locations.length; i++) {
+      if (widget.world.locations[i].isUnlockedFor(stars)) currentIndex = i;
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text(JungleWorld.worldName)),
+      appBar: AppBar(title: Text(widget.world.name)),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -123,13 +128,13 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
-                    'Explore the jungle and unlock new areas!',
+                    'Explore ${widget.world.name} and unlock new areas!',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
                 const SizedBox(height: 16),
-                for (var i = 0; i < JungleWorld.locations.length; i++)
+                for (var i = 0; i < widget.world.locations.length; i++)
                   _buildNode(
                     context: context,
                     index: i,
@@ -156,8 +161,8 @@ class _AdventureMapScreenState extends State<AdventureMapScreen>
     required Set<String> completedQuestIds,
     required bool isCurrent,
   }) {
-    final location = JungleWorld.locations[index];
-    final locationQuests = JungleQuests.forLocation(location.id);
+    final location = widget.world.locations[index];
+    final locationQuests = QuestCatalog.forLocation(location.id);
     final isUnlocked = location.isUnlockedFor(stars);
     final isCompleted = locationQuests.isNotEmpty &&
         locationQuests.every((q) => completedQuestIds.contains(q.id));

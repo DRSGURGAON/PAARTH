@@ -5,14 +5,13 @@ import 'find_discover_screen.dart';
 import 'math_dash_screen.dart';
 import 'memory_master_screen.dart';
 import 'pattern_power_screen.dart';
+import 'quick_challenge_screen.dart';
 import 'word_builder_screen.dart';
 
-/// Hub listing the playable mini-games. Five of the six V1 mini-game
-/// types from the design brief are here now (Math Dash, Memory Master,
-/// Pattern Power, Word Builder, Find & Discover). Quick Challenge
-/// (section 21's 10-challenge minimum) has no phase of its own in the
-/// 13-phase plan — flagged for the human to schedule, not silently
-/// folded into this phase.
+/// Hub listing the playable mini-games — all six types from the design
+/// brief (Math Dash, Memory Master, Pattern Power, Word Builder,
+/// Find & Discover, and Quick Challenge, which closed the long-flagged
+/// section 21 gap in the all-worlds completion pass).
 class MiniGamesScreen extends StatelessWidget {
   const MiniGamesScreen({super.key});
 
@@ -89,6 +88,20 @@ class MiniGamesScreen extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const FindDiscoverScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _MiniGameCard(
+              title: 'Quick Challenge',
+              subtitle: 'Fast fingers, quick eyes!',
+              icon: Icons.bolt_rounded,
+              color: AppColors.inkNavy,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const QuickChallengeScreen(),
                   ),
                 );
               },

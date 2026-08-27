@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/game/data/badge_catalog.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
+import 'package:super_kid_adventure/game/quests/quest_catalog.dart';
 import 'package:super_kid_adventure/game/repositories/mini_game_repository.dart';
 
 void main() {
@@ -61,6 +62,25 @@ void main() {
       expect(BadgeCatalog.earnedBadgeIds(complete), contains('jungle_explorer'));
     });
 
+    test("each world's explorer badge needs that world's own quests, "
+        'not just any matching count', () {
+      // All jungle quests done: jungle_explorer only, even though the
+      // completed count exceeds any single world's quest count.
+      final jungleDone = BadgeStats(
+        completedQuestIds: JungleQuests.all.map((q) => q.id).toSet(),
+        miniGameStarIds: const {},
+        totalStars: 0,
+        totalCoins: 0,
+      );
+
+      final earned = BadgeCatalog.earnedBadgeIds(jungleDone);
+      expect(earned, contains('jungle_explorer'));
+      expect(earned, isNot(contains('space_explorer')));
+      expect(earned, isNot(contains('dino_explorer')));
+      expect(earned, isNot(contains('magic_explorer')));
+      expect(earned, isNot(contains('robot_explorer')));
+    });
+
     test('each mini-game badge tracks its own game id only', () {
       const stats = BadgeStats(
         completedQuestIds: {},
@@ -75,6 +95,18 @@ void main() {
       expect(earned, isNot(contains('pattern_pro')));
       expect(earned, isNot(contains('word_wizard')));
       expect(earned, isNot(contains('eagle_eye')));
+      expect(earned, isNot(contains('lightning_kid')));
+    });
+
+    test('lightning_kid tracks the Quick Challenge star', () {
+      const stats = BadgeStats(
+        completedQuestIds: {},
+        miniGameStarIds: {MiniGameIds.quickChallenge},
+        totalStars: 0,
+        totalCoins: 0,
+      );
+
+      expect(BadgeCatalog.earnedBadgeIds(stats), contains('lightning_kid'));
     });
 
     test('star_collector and coin_collector have independent thresholds',
@@ -108,7 +140,7 @@ void main() {
     });
 
     test('super_kid is earned only once every other badge is earned', () {
-      final allQuestIds = JungleQuests.all.map((q) => q.id).toSet();
+      final allQuestIds = QuestCatalog.all.map((q) => q.id).toSet();
       final everything = BadgeStats(
         completedQuestIds: allQuestIds,
         miniGameStarIds: MiniGameIds.all.toSet(),

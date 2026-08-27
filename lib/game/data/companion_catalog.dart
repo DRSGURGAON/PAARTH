@@ -15,11 +15,12 @@ class CompanionIds {
   static const String panda = 'panda';
   static const String monkey = 'monkey';
   static const String puppy = 'puppy';
+  static const String cheetah = 'cheetah';
 
-  static const List<String> all = [robot, fox, panda, monkey, puppy];
+  static const List<String> all = [robot, fox, panda, monkey, puppy, cheetah];
 }
 
-/// The 5 V1 companions (design brief section 10) and the real,
+/// The companions (design brief section 10) and the real,
 /// gameplay-affecting help each gives once equipped:
 ///
 /// - Robot: math hint in Math Dash (crosses out one wrong answer)
@@ -27,6 +28,7 @@ class CompanionIds {
 /// - Panda: extra study time in Memory Master
 /// - Monkey: points at one hidden object in Find & Discover
 /// - Puppy: sniffs out the first letter in Word Builder
+/// - Cheetah: extra seconds on every Quick Challenge round timer
 ///
 /// A companion unlocks by earning a star in the mini-game it goes on to
 /// help with — proof the child can already do it without help. Like
@@ -81,6 +83,15 @@ class CompanionCatalog {
       icon: Icons.favorite_rounded,
       color: AppColors.sunshineYellow,
       unlockMiniGameId: MiniGameIds.wordBuilder,
+    ),
+    Companion(
+      id: CompanionIds.cheetah,
+      name: 'Cheetah',
+      description: 'Earn a star in Quick Challenge to unlock Cheetah.',
+      abilityLabel: 'Adds extra seconds to every Quick Challenge round.',
+      icon: Icons.flash_on_rounded,
+      color: AppColors.gentleWarning,
+      unlockMiniGameId: MiniGameIds.quickChallenge,
     ),
   ];
 

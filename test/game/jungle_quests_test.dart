@@ -28,20 +28,31 @@ void main() {
       }
     });
 
-    test('every location has at least one quest, except Mountain', () {
-      // Mountain ships real and honestly-locked in the map (Phase 2
-      // redesign), but its quest content hasn't been authored yet —
-      // deliberate scope exclusion, not a content gap. See JungleWorld's
-      // doc comment and LocationQuestsScreen's "coming soon" state.
+    test('every location has at least one quest', () {
       for (final location in JungleWorld.locations) {
-        if (location.id == 'mountain') continue;
         expect(JungleQuests.forLocation(location.id), isNotEmpty,
             reason: '${location.name} has no quests');
       }
     });
 
-    test('Mountain intentionally has no quests yet', () {
-      expect(JungleQuests.forLocation('mountain'), isEmpty);
+    test('Mountain got its quest content in the all-worlds pass', () {
+      // Mountain shipped honestly empty through V1; the completion pass
+      // authored its two quests, so the old "no quests yet" exception
+      // is gone for good.
+      final questIds =
+          JungleQuests.forLocation('mountain').map((q) => q.id).toList();
+      expect(questIds, ['eagle_delivery', 'snowy_summit']);
+    });
+
+    test('the Jungle Temple hosts the world-boss quest', () {
+      final boss =
+          JungleQuests.all.firstWhere((q) => q.id == 'jungle_guardian');
+      expect(boss.locationId, 'jungle_temple');
+      expect(boss.starReward, 3);
+      expect(boss.challenges.length, 4);
+      expect(boss.npc, isNotNull);
+      expect(boss.introDialogue.length, greaterThanOrEqualTo(3));
+      expect(boss.resolutionSteps.length, greaterThanOrEqualTo(3));
     });
 
     test('every challenge is well-formed', () {

@@ -3,9 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:super_kid_adventure/core/di/app_scope.dart';
 import 'package:super_kid_adventure/core/theme/app_theme.dart';
 import 'package:super_kid_adventure/features/adventure_map/adventure_map_screen.dart';
+import 'package:super_kid_adventure/game/models/game_world.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
 import 'package:super_kid_adventure/game/repositories/progress_repository.dart';
 import 'package:super_kid_adventure/game/repositories/quest_repository.dart';
+import 'package:super_kid_adventure/game/worlds/space_world.dart';
 
 import 'support/fake_local_storage_service.dart';
 
@@ -14,6 +16,7 @@ void main() {
     int stars = 0,
     Set<String>? completedQuestIds,
     Map<String, int> starsEarned = const {},
+    GameWorld? world,
   }) async {
     final storage = FakeLocalStorageService();
     if (stars > 0) await ProgressRepository(storage).addStars(stars);
@@ -25,7 +28,9 @@ void main() {
       storage: storage,
       child: MaterialApp(
         theme: AppTheme.light,
-        home: const AdventureMapScreen(),
+        home: world == null
+            ? const AdventureMapScreen()
+            : AdventureMapScreen(world: world),
       ),
     );
   }
@@ -114,16 +119,34 @@ void main() {
   });
 
   testWidgets(
-      'opening Mountain before it has quest content shows a friendly '
-      'coming-soon screen instead of an empty or fake quest list',
-      (tester) async {
+      'opening Mountain shows its quests (the old coming-soon state is '
+      'gone now that its content is authored)', (tester) async {
     await tester.pumpWidget(await buildHarness(stars: 14));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Mountain'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('coming to Mountain soon'), findsOneWidget);
+    expect(find.textContaining('coming to Mountain soon'), findsNothing);
+    expect(find.text("The Eagle's Delivery"), findsOneWidget);
+    expect(find.text('The Snowy Summit'), findsOneWidget);
+  });
+
+  testWidgets('the map renders whichever world it is given', (tester) async {
+    await tester.pumpWidget(
+      await buildHarness(stars: 30, world: SpaceWorld.world),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Space Mission'), findsOneWidget);
+    expect(find.text('Space Station'), findsOneWidget);
+    expect(find.text('34 ⭐ to unlock'), findsOneWidget); // Space Portal
+
+    await tester.tap(find.text('Space Station'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rocket Check-Up'), findsOneWidget);
+    expect(find.text('Countdown Control'), findsOneWidget);
   });
 
   testWidgets('locked, unlocked, and completed nodes each carry a distinct '

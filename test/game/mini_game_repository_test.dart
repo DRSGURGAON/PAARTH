@@ -32,13 +32,14 @@ void main() {
       expect(fresh.starEarnedGameIds(), {MiniGameIds.wordBuilder});
     });
 
-    test('MiniGameIds.all lists exactly the 5 built mini-games', () {
+    test('MiniGameIds.all lists exactly the 6 built mini-games', () {
       expect(MiniGameIds.all, [
         MiniGameIds.mathDash,
         MiniGameIds.memoryMaster,
         MiniGameIds.patternPower,
         MiniGameIds.wordBuilder,
         MiniGameIds.findDiscover,
+        MiniGameIds.quickChallenge,
       ]);
     });
   });

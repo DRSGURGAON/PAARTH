@@ -12,6 +12,7 @@ class MiniGameIds {
   static const String patternPower = 'pattern_power';
   static const String wordBuilder = 'word_builder';
   static const String findDiscover = 'find_discover';
+  static const String quickChallenge = 'quick_challenge';
 
   static const List<String> all = [
     mathDash,
@@ -19,6 +20,7 @@ class MiniGameIds {
     patternPower,
     wordBuilder,
     findDiscover,
+    quickChallenge,
   ];
 }
 

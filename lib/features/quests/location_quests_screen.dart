@@ -5,7 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
 import '../../game/models/quest_state.dart';
 import '../../game/models/world_location.dart';
-import '../../game/quests/jungle_quests.dart';
+import '../../game/quests/quest_catalog.dart';
 import '../../game/repositories/quest_progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import 'quest_intro_screen.dart';
@@ -37,7 +37,7 @@ class _LocationQuestsScreenState extends State<LocationQuestsScreen> {
   @override
   Widget build(BuildContext context) {
     final storage = AppScope.of(context).storage;
-    final quests = JungleQuests.forLocation(widget.location.id);
+    final quests = QuestCatalog.forLocation(widget.location.id);
     final completedIds = QuestRepository(storage).completedQuestIds();
     final inProgressQuestId = QuestProgressRepository(storage).load()?.questId;
 
@@ -71,9 +71,10 @@ class _LocationQuestsScreenState extends State<LocationQuestsScreen> {
   }
 }
 
-/// Shown for a location with no quest content yet (V1: Mountain). Honest
-/// rather than a fake/empty-looking list — makes clear more is coming
-/// without any button that would pretend to do something real.
+/// Shown for a location with no quest content yet (none ship empty
+/// today, but the guard stays for content added ahead of its quests).
+/// Honest rather than a fake/empty-looking list — makes clear more is
+/// coming without any button that would pretend to do something real.
 class _ComingSoon extends StatelessWidget {
   const _ComingSoon({required this.location});
 

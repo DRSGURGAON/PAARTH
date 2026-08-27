@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/activities/chess/chess_screen.dart';
 import '../../features/activities/guitar/guitar_screen.dart';
 import '../../features/activities/piano/piano_screen.dart';
-import '../../features/adventure_map/adventure_map_screen.dart';
+import '../../features/adventure_map/world_select_screen.dart';
 import '../../features/collection/collection_screen.dart';
 import '../../features/companions/companion_select_screen.dart';
 import '../../features/home/home_screen.dart';
@@ -38,7 +38,7 @@ class AppRouter {
       case RouteNames.home:
         return _pageRoute(const HomeScreen(), settings);
       case RouteNames.adventureMap:
-        return _pageRoute(const AdventureMapScreen(), settings);
+        return _pageRoute(const WorldSelectScreen(), settings);
       case RouteNames.miniGames:
         return _pageRoute(const MiniGamesScreen(), settings);
       case RouteNames.collection:

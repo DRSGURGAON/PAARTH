@@ -12,7 +12,7 @@ see Phase 13's notes below.)
 Full design brief: see `docs/GAME_DESIGN_BRIEF.md`. Building an Android
 release from this repo: see `docs/RELEASE.md`.
 
-## Status: Phase 13 of 13 — Testing + Android release build (V1 complete)
+## Status: all phases complete — all five worlds, all six mini-games playable
 
 This repo is being built in phases (see `docs/GAME_DESIGN_BRIEF.md`
 section 23 / `docs/PHASE_PLAN.md`). Implemented so far:
@@ -101,7 +101,8 @@ Jungle Adventure map with star-gated locked/unlocked locations.
 **Known gap, not silently absorbed into any phase:** the design
 brief's Quick Challenge mini-game type (section 21's "10 Quick
 Challenges" minimum) has no phase of its own in `docs/PHASE_PLAN.md`'s
-13-phase list — it needs to be explicitly scheduled.
+13-phase list — it needed explicit scheduling, and was eventually built
+in the **all-worlds completion pass** (see below).
 
 **Phase 7** —
 - `CoinRepository`: a second currency alongside stars (brief section
@@ -617,6 +618,61 @@ Chess, 🎹 Piano, 🎸 Guitar, all offline, no accounts, no permissions:
 - Same honest limit: no Flutter SDK available here — not compiled,
   analyzed, or run; Phase 13's note still applies in full
 
+**All-worlds completion pass** — everything the brief designed but V1
+deferred, built in one pass so the whole game is now playable start to
+finish:
+
+- **Mountain finally has its quests** ("The Eagle's Delivery", "The
+  Snowy Summit") — the honest "coming soon" state it shipped with is
+  gone because the content now exists, and the jungle gained a proper
+  world-boss finale at the Jungle Temple ("The Jungle Guardian": Raja
+  the Guardian Tiger, four trials across math/logic/memory/words,
+  3⭐ base reward)
+- **Worlds 2–5 built in full** — Space Mission 🚀, Dino Island 🦕,
+  Magic Kingdom 🏰, Robot City 🤖: five locations each
+  (`game/worlds/*.dart`), two quests per location
+  (`game/quests/space_quests.dart` etc.), each world ending in its own
+  four-trial boss quest (Zorb the Star Keeper, Rex the Gentle King,
+  Queen Lumina, Chief Gigabyte — whose Mega Core finale crowns the
+  child Champion of all five worlds). Same Class 2 difficulty band
+  throughout; embedded mini-game challenges alternate Math Dash and
+  Pattern Power (Memory Master embeds stay jungle-only because its
+  generated rounds are jungle-themed — other worlds author their own
+  `MemoryChallenge` moments)
+- **World-select screen** — the Adventure Map button now opens a
+  five-card world list (locked cards say how many more ⭐, unlocked
+  ones show quest progress); `AdventureMapScreen` takes a `GameWorld`
+  and renders any world's trail. New `GameWorld` model, `Worlds`
+  registry, and `QuestCatalog` merging all five content files —
+  screens and badges read the catalog, so world six will be another
+  data file, not a code change
+- **Star economy across worlds** — thresholds stair-step (Space 20⭐,
+  Dino 42⭐, Magic 62⭐, Robot 82⭐) so every location in every world is
+  reachable from base quest rewards alone;
+  `test/game/world_quests_test.dart` proves reachability, unique ids,
+  boss placement, and challenge well-formedness for the whole catalog
+- **Quick Challenge built** (closing the long-flagged section 21 gap):
+  ten authored tap/count/match/avoid templates
+  (`QuickChallengeGenerator`, shuffle-bag so short sessions never
+  repeat), one unified tap-the-targets round shape, a gentle 25-second
+  round timer that resets with encouragement instead of punishing,
+  standard session rewards, and a Mini-Games hub card
+- **Cheetah companion** — unlocked by the Quick Challenge star, adds
+  +10 friendly seconds to every Quick Challenge round (real help, same
+  pattern as Panda's extra study time), keeping the
+  one-companion-per-mini-game invariant true
+- **Badges** — per-world explorer badges (each checks its own world's
+  quest ids, never a bare count) plus Lightning Kid for the Quick
+  Challenge star; Parent Zone's quest total now counts the full catalog
+- Tests updated and added throughout: flipped the old
+  "Mountain has no quests yet" tests, world-select flows, per-world
+  map rendering, Quick Challenge generator (every template verified
+  mathematically) and screen (perfect run, decoy tap, timeout reset,
+  no-star honesty, Cheetah bonus)
+- Same honest limit as every phase: no Flutter SDK in this
+  environment — run `flutter analyze` and `flutter test` locally and
+  report anything red
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**
@@ -818,7 +874,7 @@ lib/
     home/
     adventure_map/
     quests/                  # quest list / intro / play / celebration
-    mini_games/              # hub + all 5 mini-games
+    mini_games/              # hub + all 6 mini-games
     collection/               # badge grid screen
     companions/                 # "My Companions" selection screen
     room/                    # "My Room" decoration screen
@@ -831,10 +887,10 @@ lib/
                               # QuestRepository, MiniGameRepository, CompanionRepository,
                               # ShopRepository, RoomRepository, PlayTimeRepository,
                               # SettingsRepository
-    worlds/                  # JungleWorld (Space/Dino/Magic/Robot: later)
-    systems/                 # QuestEngine, DifficultyTracker, all 5 puzzle generators,
+    worlds/                  # all five worlds + Worlds registry
+    systems/                 # QuestEngine, DifficultyTracker, all 6 puzzle generators,
                               # ParentGateChallengeGenerator
-    quests/                  # JungleQuests content (10 quests, data only)
+    quests/                  # per-world quest content + QuestCatalog (data only)
   shared/
     widgets/                 # BigRoundedButton, ShakeWidget, PopIn, ...
 test/
