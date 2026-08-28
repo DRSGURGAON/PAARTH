@@ -57,6 +57,9 @@ class PianoScreenState extends State<PianoScreen> {
     if (_loaded) return;
     final storage = AppScope.of(context).storage;
     _sound = widget.soundService ?? InstrumentSoundService(storage);
+    // Warm every piano sample now so the very first key press is as
+    // instant as the hundredth — lazy loading was audible lag.
+    _sound.preloadInstrument('piano');
     _feedbackService = FeedbackService(storage);
     _activityRepository = ActivityProgressRepository(storage);
     _progressRepository = ProgressRepository(storage);

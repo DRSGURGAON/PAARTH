@@ -1,12 +1,10 @@
 import '../../core/storage/local_storage_service.dart';
 
-/// The child's cross-world progress currency. Only stars exist in Phase
-/// 2 (the Adventure Map needs them to decide what's unlocked); coins,
-/// badges and the rest of Phase 7's reward system extend this later.
-///
-/// Nothing calls [addStars] yet — there is no quest system to earn stars
-/// from until Phase 3 — but the read path the map depends on is real,
-/// not a stub, and Phase 3 plugs into this exact method.
+/// The child's cross-world progress currency: total stars. Quests and
+/// mini-game sessions pay in through [addStars]; the world-select and
+/// map screens read [stars] to decide what's unlocked. Coins live in
+/// `CoinRepository`, badges derive from real progress in
+/// `BadgeCatalog` — this stays the one source of truth for stars.
 class ProgressRepository {
   ProgressRepository(this._storage);
 

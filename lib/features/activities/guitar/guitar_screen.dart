@@ -64,6 +64,9 @@ class GuitarScreenState extends State<GuitarScreen> {
     if (_loaded) return;
     final storage = AppScope.of(context).storage;
     _sound = widget.soundService ?? InstrumentSoundService(storage);
+    // Warm every guitar sample now so first plucks and full strums
+    // fire instantly — lazy loading was audible lag.
+    _sound.preloadInstrument('guitar');
     _feedbackService = FeedbackService(storage);
     _activityRepository = ActivityProgressRepository(storage);
     _progressRepository = ProgressRepository(storage);

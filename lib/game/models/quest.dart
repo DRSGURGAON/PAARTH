@@ -1,6 +1,6 @@
 /// Educational subject of a challenge. Tracked per-challenge so the
-/// adaptive difficulty system (later phase) and the Parent Zone
-/// (Phase 10) can report progress per subject.
+/// adaptive `DifficultyTracker` and the Parent Zone can report
+/// progress per subject.
 enum ChallengeCategory { math, logic, memory, english }
 
 /// The friendly character who narrates a quest's story ("Momo the

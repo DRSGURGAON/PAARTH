@@ -606,10 +606,17 @@ Chess, 🎹 Piano, 🎸 Guitar, all offline, no accounts, no permissions:
   needed because Flutter has no built-in way to play bundled audio
 - *Post-release fixes from device testing*: intermittent guitar/piano
   audio traced to creating a fresh `AudioPlayer` per tap (native player
-  exhaustion under fast play) — playback now goes through cached
-  per-note `AudioPool`s with warm voices; guitar strums roll low-to-high
-  with a ~35ms stagger and the guitar samples were regenerated quieter
-  so full strums mix without clipping. The hero avatar was also
+  exhaustion under fast play) — and the *lag* that remained after that
+  traced to two more causes, both fixed: samples loaded lazily on the
+  first tap of each note (the load cost was audible latency, note by
+  note), and pooled players ran in default media-player mode (~100–300ms
+  tap-to-sound on Android). Playback now goes through in-repo per-note
+  pools of warm `PlayerMode.lowLatency` players (SoundPool-backed on
+  Android), and `preloadInstrument` warms every sample the moment the
+  Piano/Guitar screen opens — a unit test pins the preload manifest to
+  the real asset folders so it can't drift. Guitar strums roll
+  low-to-high with a ~35ms stagger and the guitar samples were
+  regenerated quieter so full strums mix without clipping. The hero avatar was also
   upgraded from the placeholder paper-doll to a painted vector cartoon
   kid (`HeroAvatarPainter`): scalloped hair fringe, real face (eyes
   with sparkle, smile, blush), ears, arms with sleeves and hands,
@@ -717,10 +724,15 @@ iOS support is architected for but not built yet — see the brief).
    once you've played), and buttons for Mini-Games, Collection,
    Companions, Room, and **Customize** (the detailed swatch-by-swatch
    editor, also reachable from the Room).
-5. On the **Adventure Map**, both **Tree House** and **Monkey Camp**
-   start unlocked; tap Tree House → a list of 2 quests. Locked locations
-   show a lock icon, a gentle "Earn N more ⭐" hint on tap (with a small
-   shake), and never rely on color alone to say so.
+5. Tapping **Adventure Map** opens **Adventure Worlds**: five world
+   cards — 🌴 Jungle Adventure open from the start, 🚀 Space Mission /
+   🦕 Dino Island / 🏰 Magic Kingdom / 🤖 Robot City locked with "N
+   more ⭐ to unlock" (tapping a locked card shakes and hints, never
+   navigates). Tap the jungle → its map: both **Tree House** and
+   **Monkey Camp** start unlocked; tap Tree House → a list of 2
+   quests. Locked locations show a lock icon, a gentle "Earn N more ⭐"
+   hint on tap (with a small shake), and never rely on color alone to
+   say so.
 6. Play **Repair the Jungle Bridge**: Momo the Monkey tells the story
    in short dialogue lines (Next to advance, Skip to jump ahead), then
    **Start Adventure** → 3 challenges, each an embedded real
@@ -737,13 +749,16 @@ iOS support is architected for but not built yet — see the brief).
    screen. A no-quest-level-miss run pays **+3 ⭐ +50 🪙**; a run with
    retries still pays **+2 ⭐ +35 🪙** (retrying is never punished).
 7. Back on the map, your stars now count toward unlocks: **Waterfall**
-   opens at 6 ⭐, **Lion Cave** at 10 ⭐, **Mountain** at 14 ⭐ (real and
-   locked, but its own quests aren't authored yet — opening it early
-   shows a friendly "more adventures coming soon" screen instead of a
-   fake quest list), and **Jungle Temple** at 16 ⭐. A completed
-   location shows a ✓ badge and its stars earned instead of a lock
-   hint. Your hero also appears as a small marker at your furthest
-   unlocked location.
+   opens at 6 ⭐, **Lion Cave** at 10 ⭐, **Mountain** at 14 ⭐ (two real
+   quests: "The Eagle's Delivery" and "The Snowy Summit"), and
+   **Jungle Temple** at 16 ⭐ — three quests there, ending in **The
+   Jungle Guardian** boss (Raja the Guardian Tiger, four trials, 3⭐
+   base). A completed location shows a ✓ badge and its stars earned
+   instead of a lock hint. Your hero also appears as a small marker at
+   your furthest unlocked location. Keep earning: at 20 ⭐ **Space
+   Mission** opens on the world list (Dino 42 ⭐, Magic 62 ⭐, Robot
+   82 ⭐), each with 5 locations, 10 quests, and its own boss finale —
+   every threshold is reachable from quest rewards alone.
 8. Replay a completed quest: it's marked "Completed! Play again for
    practice" and awards no extra stars. Quit mid-quest instead (back
    button, or kill the app) and the quest list shows "Keep going —
@@ -789,10 +804,12 @@ iOS support is architected for but not built yet — see the brief).
 15. On Home, tap **My Collection**: a grid of badges, all locked at
     first. Earn a star in any mini-game (or complete a quest) and
     return here — that badge is now bright with its description, and
-    the "N of 10 badges earned" count at the top updates.
+    the "N of 15 badges earned" count at the top updates (per-world
+    explorer badges only light up when *that* world's own quests are
+    all done — never from a matching count elsewhere).
 16. Close and reopen the app: hero, stars, coins, completed quests,
     mini-game stars, and difficulty levels all persist.
-17. On Home, tap **My Companions**: 5 companions, all locked at first.
+17. On Home, tap **My Companions**: 6 companions, all locked at first.
     Earn a star in any mini-game and return here — that companion is
     now shown in color and tappable; tap it to equip.
 18. With Robot equipped, play Math Dash: a "Robot Hint" button appears
@@ -846,11 +863,30 @@ iOS support is architected for but not built yet — see the brief).
 32. In Parent Zone, toggle **Sound Effects** and **Haptic Feedback**
     off. Go play — no more click/vibration on answers. Turn them back
     on and they resume immediately, no restart needed.
-33. `flutter test` passes (all widget + unit tests) — this is the
-    **first time** this exact command has ever run against this code;
-    see Phase 13's notes above.
-34. `flutter analyze` reports no errors.
-35. Ready to actually ship it? Follow `docs/RELEASE.md` end to end.
+33. At Mini-Games, try **Quick Challenge** ("Fast fingers, quick
+    eyes!"): 5 speedy rounds drawn from ten templates — tap all the
+    fish, count the apples, spot the odd one out, tap the bigger
+    number, match the shape, first letters, and more. A friendly ⏱️
+    counts down from 25s; running out just resets the round with "no
+    rush" encouragement (nothing ends, nothing is lost — it only stops
+    counting as a first-try ace). Ace 4 of 5 for a ⭐, which unlocks
+    the **Cheetah** companion — equip it and every round timer starts
+    10 seconds higher.
+34. On a real device, open **Piano** or **Guitar** and tap immediately:
+    the very first key/string sounds as instantly as the hundredth
+    (every sample preloads when the screen opens, and playback runs in
+    low-latency mode — if notes ever lag or drop out again, that's a
+    bug).
+35. Play through to the end: each world's final location hosts its
+    boss ("The Galaxy Guardian", "The Dino King", "The Crown of
+    Wisdom", "The Mega Core Awakens") — beating Robot City's Mega Core
+    crowns you Champion of all five worlds, and the full catalog shows
+    as completed in Parent Zone's quest count.
+36. `flutter test` passes (all widget + unit tests) — note the honest
+    limit in Phase 13's notes above: this sandbox has no Flutter SDK,
+    so run it locally.
+37. `flutter analyze` reports no errors.
+38. Ready to actually ship it? Follow `docs/RELEASE.md` end to end.
 
 ## Project structure
 
