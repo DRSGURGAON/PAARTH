@@ -129,8 +129,8 @@ void main() {
     for (var i = 0; i < total; i++) {
       // Spoil every round with a decoy tap before completing it.
       final round = stateOf(tester).currentRound;
-      final decoyIndex = List.generate(round.tiles.length, (i) => i)
-          .firstWhere((i) => !round.targetIndices.contains(i));
+      final decoyIndex = List.generate(round.tiles.length, (t) => t)
+          .firstWhere((t) => !round.targetIndices.contains(t));
       await tester.tap(find.byKey(ValueKey('tile_$decoyIndex')));
       await tester.pumpAndSettle();
       await completeRound(tester);

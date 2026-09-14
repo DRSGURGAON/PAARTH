@@ -83,7 +83,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Adventure Map: both starter locations unlocked, later ones locked.
-    expect(find.text('Jungle Adventure'), findsOneWidget);
+    // The world name now appears twice — the map's AppBar plus the
+    // world-select card still mounted underneath — so assert on
+    // map-specific copy instead of the bare world name.
+    expect(find.textContaining('Explore Jungle Adventure'), findsOneWidget);
     expect(find.text('Tree House'), findsOneWidget);
     expect(find.text('Monkey Camp'), findsOneWidget);
     expect(find.text('6 ⭐ to unlock'), findsOneWidget);
@@ -215,7 +218,11 @@ void main() {
         (challenge.correctIndex + 1) % challenge.options.length;
 
     await tester.tap(find.byKey(ValueKey('option_$wrongIndex')));
-    await tester.pump(const Duration(milliseconds: 80));
+    // Two pumps on purpose: the first processes the answer (the
+    // shake signal bumps, starting the animation at offset 0), the
+    // second advances it to mid-shake where it is genuinely off-centre.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 40));
 
     // The wrong answer actually triggers the options' shake animation,
     // not just the encouragement text.

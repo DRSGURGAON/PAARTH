@@ -11,13 +11,16 @@ import 'package:super_kid_adventure/game/repositories/progress_repository.dart';
 import 'support/fake_local_storage_service.dart';
 
 void main() {
-  /// The badge grid (10 cards, 2 columns) is taller than the default
-  /// 800x600 test surface, so GridView.builder would only build the
-  /// on-screen cards and undercount locks/badges. Enlarge the surface
-  /// so every card actually renders, matching what a real tall phone
-  /// screen (or a scroll) would eventually show.
+  /// The badge grid is far taller than the default 800x600 test
+  /// surface, so GridView.builder would only build the on-screen cards
+  /// and undercount locks/badges. Enlarge the surface so every card
+  /// actually renders, matching what a real tall phone screen (or a
+  /// scroll) would eventually show. The height is derived from the
+  /// badge count — at 800 wide, two columns make each card ~442 tall —
+  /// so adding badges can never silently undercount again.
   Future<void> pumpTallCollection(WidgetTester tester, Widget app) async {
-    tester.view.physicalSize = const Size(800, 3000);
+    final rows = (BadgeCatalog.all.length / 2).ceil();
+    tester.view.physicalSize = Size(800, 300 + rows * 470);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);

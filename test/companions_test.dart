@@ -10,10 +10,12 @@ import 'package:super_kid_adventure/game/repositories/mini_game_repository.dart'
 import 'support/fake_local_storage_service.dart';
 
 void main() {
-  /// The companion grid (5 cards, 2 columns) is taller than the default
-  /// 800x600 test surface — same reasoning as Collection's own helper.
+  /// The companion grid is taller than the default 800x600 test
+  /// surface — same reasoning, and same count-driven height, as
+  /// Collection's own helper.
   Future<void> pumpTallCompanions(WidgetTester tester, Widget app) async {
-    tester.view.physicalSize = const Size(800, 3000);
+    final rows = (CompanionCatalog.all.length / 2).ceil();
+    tester.view.physicalSize = Size(800, 300 + rows * 490);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);

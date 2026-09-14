@@ -150,8 +150,11 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
       _tappedTargets.clear();
       _feedback = "Time flew by! Let's try this one again — no rush.";
       _shakeSignal++;
+      // Inside setState so the displayed countdown jumps back to full
+      // in the same frame; restarting outside it left the chip showing
+      // the old value until the next tick.
+      _restartTimer();
     });
-    _restartTimer();
   }
 
   Future<void> _tapTile(int index) async {

@@ -7,6 +7,7 @@ import 'package:super_kid_adventure/features/parent_zone/parent_zone_screen.dart
 import 'package:super_kid_adventure/game/models/hero_profile.dart';
 import 'package:super_kid_adventure/game/models/quest.dart';
 import 'package:super_kid_adventure/game/quests/jungle_quests.dart';
+import 'package:super_kid_adventure/game/quests/quest_catalog.dart';
 import 'package:super_kid_adventure/game/repositories/coin_repository.dart';
 import 'package:super_kid_adventure/game/repositories/hero_repository.dart';
 import 'package:super_kid_adventure/game/repositories/play_time_repository.dart';
@@ -36,7 +37,7 @@ void main() {
     await tester.pumpWidget(buildHarness(storage));
 
     expect(find.text('Less than a minute played'), findsOneWidget);
-    expect(find.text('0 of ${JungleQuests.all.length}'), findsOneWidget);
+    expect(find.text('0 of ${QuestCatalog.all.length}'), findsOneWidget);
     expect(find.text('Lv 1'), findsNWidgets(4));
     expect(
       find.textContaining('Math is the newest skill'),
@@ -60,7 +61,7 @@ void main() {
     await tester.pumpWidget(buildHarness(storage));
 
     expect(find.text('1h 5m played'), findsOneWidget);
-    expect(find.text('1 of ${JungleQuests.all.length}'), findsOneWidget);
+    expect(find.text('1 of ${QuestCatalog.all.length}'), findsOneWidget);
     expect(find.text('Lv 2'), findsNWidgets(2)); // math, logic
     expect(find.text('Lv 1'), findsNWidgets(2)); // memory, english
 

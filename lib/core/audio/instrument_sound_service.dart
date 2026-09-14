@@ -47,9 +47,15 @@ class InstrumentSoundService {
   /// instances so re-entering an activity never reloads its samples.
   static final Map<String, _NotePool> _pools = {};
 
-  /// Simultaneous voices per note — enough for fast repeats of the
-  /// same key without cutting the previous strike short.
-  static const int _voicesPerNote = 3;
+  /// Simultaneous voices per note — enough for a fast repeat of the
+  /// same key without cutting the previous strike short. Deliberately
+  /// small: preloading warms every note of an instrument, so this
+  /// multiplies (13 piano notes x 2 = 26 players, 15 guitar x 2 = 30).
+  /// Keeping it at 2 leaves the total bounded and well clear of the
+  /// native-player exhaustion that a fresh player per tap once caused,
+  /// while still covering real play — a strum hits six *different*
+  /// notes, so each one uses its own pool anyway.
+  static const int _voicesPerNote = 2;
 
   /// Canonical manifest of the bundled samples, by instrument — the
   /// exact files under `assets/audio/`. [preloadInstrument] warms all
@@ -76,7 +82,9 @@ class InstrumentSoundService {
     for (final noteId in notesByInstrument[instrument] ?? const <String>[]) {
       final path = 'audio/$instrument/$noteId.wav';
       final pool = _pools[path] ??= _NotePool(path, _voicesPerNote);
-      pool.ensureLoaded().catchError((Object _) => _pools.remove(path));
+      pool.ensureLoaded().catchError((Object _) {
+        _pools.remove(path)?.release();
+      });
     }
   }
 
@@ -94,8 +102,11 @@ class InstrumentSoundService {
 
     final pool = _pools[path] ??= _NotePool(path, _voicesPerNote);
     pool.play().catchError((Object _) {
-      // Failed load or start: forget the pool so a later tap retries.
-      _pools.remove(path);
+      // Failed load or start: drop the pool (releasing any native
+      // players it did manage to create, so a broken pool can never
+      // leak the very thing this design exists to conserve) so a
+      // later tap retries from scratch.
+      _pools.remove(path)?.release();
     });
   }
 }
@@ -127,14 +138,21 @@ class _NotePool {
           _players.add(player);
         }
       } catch (_) {
-        for (final player in _players) {
-          player.dispose().catchError((Object _) {});
-        }
-        _players.clear();
+        release();
         _loading = null;
         rethrow;
       }
     }();
+  }
+
+  /// Disposes every player this pool created and forgets them, so a
+  /// dropped pool never leaves native players behind.
+  void release() {
+    for (final player in _players) {
+      player.dispose().catchError((Object _) {});
+    }
+    _players.clear();
+    _next = 0;
   }
 
   Future<void> play() async {
