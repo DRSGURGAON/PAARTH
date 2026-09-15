@@ -108,6 +108,10 @@ void main() {
     // Gentle encouragement plus the memory hint: another look.
     expect(find.textContaining('!'), findsWidgets);
     expect(find.byKey(const ValueKey('look_again_button')), findsOneWidget);
+    // Regression: the message and the button used to share one
+    // fixed-height box and could overflow the moment both showed at
+    // once (see the dedicated overflow regression test below).
+    expect(tester.takeException(), isNull);
 
     await tester.tap(find.byKey(const ValueKey('look_again_button')));
     await tester.pump();
@@ -122,6 +126,27 @@ void main() {
     await tester.tap(find.byKey(ValueKey('option_${question.correctIndex}')));
     await tester.pumpAndSettle();
     expect(find.text('2 / $total'), findsOneWidget);
+  });
+
+  testWidgets(
+      'a miss never overflows the layout, even with the longest rotating '
+      'encouragement line and the Look Again button both showing at '
+      'once (regression for a real on-device overflow)', (tester) async {
+    await tester.pumpWidget(await buildHarness());
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pump();
+
+    // Land on round index 2 (0-based) — its rotating encouragement is
+    // "Let's find the answer together! 🔍", the longest of the three
+    // and the exact one shown in the reported overflow.
+    await waitThenAnswerCorrectly(tester);
+    await waitThenAnswerCorrectly(tester);
+    await waitOutStudy(tester);
+    await answerWrongOnce(tester);
+
+    expect(find.text("Let's find the answer together! 🔍"), findsOneWidget);
+    expect(find.byKey(const ValueKey('look_again_button')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the streak chip appears from 2 in a row and resets on a miss',

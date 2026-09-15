@@ -18,7 +18,9 @@ import '../../game/systems/difficulty_tracker.dart';
 import '../../game/systems/memory_round_generator.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../game/systems/quest_reward_service.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/hud_chip.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
 
@@ -357,29 +359,26 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
           style: textTheme.headlineMedium,
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 56,
-          child: _feedback == null
-              ? null
-              : Column(
-                  children: [
-                    Text(
-                      _feedback!,
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyLarge
-                          ?.copyWith(color: AppColors.gentleWarning),
-                    ),
-                    if (!_lookAgainUsed)
-                      TextButton.icon(
-                        key: const ValueKey('look_again_button'),
-                        onPressed: _lookAgain,
-                        icon: const Icon(Icons.visibility_rounded,
-                            color: AppColors.skyBlue),
-                        label: const Text('Look again'),
-                      ),
-                  ],
-                ),
-        ),
+        // Real bug fix: this used to be a fixed 56px box holding BOTH
+        // the encouragement text (which can wrap to 2 lines) AND the
+        // full "Look again" button nested inside it — guaranteed to
+        // overflow the moment both showed at once (confirmed on a real
+        // device). The message now gets its own content-sized card,
+        // and the button moves out as its own sibling below, the same
+        // shape every other mini-game's companion-hint button already
+        // uses safely.
+        _feedback == null
+            ? const SizedBox(height: 56)
+            : AnswerFeedbackBanner(message: _feedback!),
+        if (_feedback != null && !_lookAgainUsed) ...[
+          const SizedBox(height: 8),
+          TextButton.icon(
+            key: const ValueKey('look_again_button'),
+            onPressed: _lookAgain,
+            icon: const Icon(Icons.visibility_rounded, color: AppColors.skyBlue),
+            label: const Text('Look again'),
+          ),
+        ],
         const Spacer(),
         ShakeWidget(
           shakeSignal: _shakeSignal,
@@ -409,7 +408,10 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
 
 /// One jungle friend at their scene spot — a little diorama card rather
 /// than a bare emoji, so the scene reads as "discovering things in the
-/// jungle" (brief section 5).
+/// jungle" (brief section 5). A soft shadow and border, plus the
+/// spot's name spelled out under its icon, turn what used to be two
+/// bare stacked emoji into something that actually looks designed —
+/// and gives the child something to read along with while studying.
 class _SceneCard extends StatelessWidget {
   const _SceneCard({required this.placement, super.key});
 
@@ -421,18 +423,41 @@ class _SceneCard extends StatelessWidget {
       child: Semantics(
         label: '${placement.object.label} ${placement.spot.label}',
         child: Container(
-          width: 88,
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          width: 94,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.leafGreen.withValues(alpha: 0.35),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.leafGreen.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(placement.object.emoji,
                   style: const TextStyle(fontSize: 40)),
-              Text(placement.spot.emoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(height: 2),
+              Text(placement.spot.emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(
+                placement.spot.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 12,
+                      color: AppColors.inkNavy.withValues(alpha: 0.65),
+                    ),
+              ),
             ],
           ),
         ),
@@ -458,30 +483,21 @@ class _MemoryHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.titleLarge;
-
-    Widget chip(String text, String semanticLabel) => Semantics(
-          label: semanticLabel,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(text, style: style),
-          ),
-        );
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        chip('⭐ $score', '$score remembered so far'),
+        HudChip(text: '⭐ $score', semanticLabel: '$score remembered so far'),
         if (streak >= 2)
-          chip('🧠 $streak', '$streak remembered in a row')
+          HudChip(
+            text: '🧠 $streak',
+            semanticLabel: '$streak remembered in a row',
+          )
         else
           const SizedBox.shrink(),
-        chip('${roundNumber + 1} / $total',
-            'Round ${roundNumber + 1} of $total'),
+        HudChip(
+          text: '${roundNumber + 1} / $total',
+          semanticLabel: 'Round ${roundNumber + 1} of $total',
+        ),
       ],
     );
   }

@@ -121,6 +121,42 @@ void main() {
       }
     });
 
+    test('next() rarely repeats the same question type back to back', () {
+      // A real complaint: even though each scene is freshly randomized,
+      // seeing the same question TYPE (or worse, the exact same
+      // prompt) twice in a row reads as broken to a 7-year-old. next()
+      // now retries (bounded) to avoid that. Assert a low rate rather
+      // than an absolute zero, since a small content pool exhausting
+      // every retry is possible in principle, just vanishingly
+      // unlikely — this still clearly distinguishes "the anti-repeat
+      // logic is working" from "it's absent" (which would repeat back
+      // to back roughly a third of the time).
+      final gen = MemoryRoundGenerator(random: Random(42));
+      MemoryQuestionType? previousType;
+      var immediateTypeRepeats = 0;
+      const rounds = 400;
+      for (var i = 0; i < rounds; i++) {
+        final round = gen.next(3);
+        if (round.questionType == previousType) immediateTypeRepeats++;
+        previousType = round.questionType;
+      }
+      expect(immediateTypeRepeats, lessThan(rounds ~/ 20));
+    });
+
+    test('next() rarely repeats the exact same prompt across two rounds '
+        'in a row', () {
+      final gen = MemoryRoundGenerator(random: Random(11));
+      String? previousPrompt;
+      var immediatePromptRepeats = 0;
+      const rounds = 400;
+      for (var i = 0; i < rounds; i++) {
+        final round = gen.next(3);
+        if (round.question.prompt == previousPrompt) immediatePromptRepeats++;
+        previousPrompt = round.question.prompt;
+      }
+      expect(immediatePromptRepeats, lessThan(rounds ~/ 20));
+    });
+
     test('study duration is longer for larger scenes and slightly shorter '
         'at top levels', () {
       final small = generator.objectRecall(1);

@@ -19,7 +19,9 @@ import '../../game/systems/pattern_hint_service.dart';
 import '../../game/systems/pattern_question_generator.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../game/systems/quest_reward_service.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/hud_chip.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
 
@@ -295,34 +297,17 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
           style: textTheme.headlineMedium,
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 72,
-          child: _feedback == null
-              ? null
-              : Column(
-                  children: [
-                    Text(
-                      _feedback!,
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyLarge
-                          ?.copyWith(color: AppColors.gentleWarning),
-                    ),
-                    if (_hint != null) ...[
-                      Text(
-                        '💡 ${_hint!.text}',
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium,
-                      ),
-                      if (_hint!.visual != null)
-                        Text(
-                          _hint!.visual!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                    ],
-                  ],
-                ),
-        ),
+        // Same reserve-then-grow approach as Math Dash's feedback area
+        // (see its comment) — this box could show 3 stacked lines
+        // (message + hint text + hint visual), the exact shape of bug
+        // that overflowed in Memory Master, so it gets the same fix.
+        _feedback == null
+            ? const SizedBox(height: 72)
+            : AnswerFeedbackBanner(
+                message: _feedback!,
+                hintText: _hint?.text,
+                hintVisual: _hint?.visual,
+              ),
         if (_foxActive && !_companionHintUsed) ...[
           Align(
             alignment: Alignment.centerRight,
@@ -451,30 +436,18 @@ class _PatternHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.titleLarge;
-
-    Widget chip(String text, String semanticLabel) => Semantics(
-          label: semanticLabel,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(text, style: style),
-          ),
-        );
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        chip('⭐ $score', '$score solved so far'),
+        HudChip(text: '⭐ $score', semanticLabel: '$score solved so far'),
         if (streak >= 2)
-          chip('🧩 $streak', '$streak solved in a row')
+          HudChip(text: '🧩 $streak', semanticLabel: '$streak solved in a row')
         else
           const SizedBox.shrink(),
-        chip('${questionNumber + 1} / $total',
-            'Pattern ${questionNumber + 1} of $total'),
+        HudChip(
+          text: '${questionNumber + 1} / $total',
+          semanticLabel: 'Pattern ${questionNumber + 1} of $total',
+        ),
       ],
     );
   }

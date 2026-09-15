@@ -59,6 +59,15 @@ class AppTheme {
             borderRadius: BorderRadius.circular(_cornerRadius),
           ),
           textStyle: textTheme.titleLarge,
+          // A default FilledButton sits perfectly flat (elevation 0),
+          // which read as lifeless for every answer/option button in
+          // the game (they're plain FilledButtons with a white
+          // background). A small lift + soft shadow makes every one of
+          // them — across every screen — look like a real pressable
+          // tile instead of a flat rectangle, with zero risk since it's
+          // pure visual styling.
+          elevation: 3,
+          shadowColor: AppColors.inkNavy.withValues(alpha: 0.25),
         ),
       ),
       cardTheme: CardThemeData(

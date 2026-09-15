@@ -10,6 +10,7 @@ import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/parent_gate_challenge.dart';
 import '../../game/systems/parent_gate_challenge_generator.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/shake_widget.dart';
 
@@ -122,17 +123,9 @@ class ParentGateScreenState extends State<ParentGateScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: 32,
-                child: _error == null
-                    ? null
-                    : Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyLarge
-                            ?.copyWith(color: AppColors.gentleWarning),
-                      ),
-              ),
+              _error == null
+                  ? const SizedBox(height: 32)
+                  : AnswerFeedbackBanner(message: _error!),
               const Spacer(flex: 2),
               BigRoundedButton(
                 label: 'Continue',

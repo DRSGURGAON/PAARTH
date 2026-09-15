@@ -16,6 +16,7 @@ import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/difficulty_tracker.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../game/systems/word_puzzle_generator.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/pop_in.dart';
 
@@ -274,17 +275,12 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 32,
-          child: _feedback == null
-              ? null
-              : Text(
-                  _feedback!,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyLarge
-                      ?.copyWith(color: AppColors.gentleWarning),
-                ),
-        ),
+        // Same reserve-then-grow fix as the other mini-games: the
+        // rotating encouragement text can wrap to 2 lines, which a
+        // fixed 32px box couldn't safely fit.
+        _feedback == null
+            ? const SizedBox(height: 32)
+            : AnswerFeedbackBanner(message: _feedback!),
         const Spacer(),
         Wrap(
           alignment: WrapAlignment.center,

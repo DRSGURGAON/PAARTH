@@ -21,7 +21,9 @@ import '../../game/systems/math_hint_service.dart';
 import '../../game/systems/math_question_generator.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../game/systems/quest_reward_service.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/hud_chip.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
 import '../player/hero_avatar_preview.dart';
@@ -322,27 +324,14 @@ class MathDashScreenState extends State<MathDashScreen> {
           style: textTheme.headlineMedium,
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 56,
-          child: _feedback == null
-              ? null
-              : Column(
-                  children: [
-                    Text(
-                      _feedback!,
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyLarge
-                          ?.copyWith(color: AppColors.gentleWarning),
-                    ),
-                    if (_hint != null)
-                      Text(
-                        '💡 ${_hint!.text}',
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium,
-                      ),
-                  ],
-                ),
-        ),
+        // Reserves the same resting height as before when there's no
+        // feedback (so idle layout is unchanged); once there is, the
+        // banner sizes to its real content instead of a fixed box that
+        // couldn't fit a wrapped 2-line message — the layout is inside
+        // a Spacer-flanked Column, so growing here is always safe.
+        _feedback == null
+            ? const SizedBox(height: 56)
+            : AnswerFeedbackBanner(message: _feedback!, hintText: _hint?.text),
         if (_robotActive && !_companionHintUsed) ...[
           Align(
             alignment: Alignment.centerRight,
@@ -408,30 +397,18 @@ class _DashHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.titleLarge;
-
-    Widget chip(String text, String semanticLabel) => Semantics(
-          label: semanticLabel,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(text, style: style),
-          ),
-        );
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        chip('⭐ $score', '$score correct so far'),
+        HudChip(text: '⭐ $score', semanticLabel: '$score correct so far'),
         if (streak >= 2)
-          chip('🔥 $streak', '$streak in a row')
+          HudChip(text: '🔥 $streak', semanticLabel: '$streak in a row')
         else
           const SizedBox.shrink(),
-        chip('${questionNumber + 1} / $total',
-            'Question ${questionNumber + 1} of $total'),
+        HudChip(
+          text: '${questionNumber + 1} / $total',
+          semanticLabel: 'Question ${questionNumber + 1} of $total',
+        ),
       ],
     );
   }

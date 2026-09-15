@@ -17,7 +17,9 @@ import '../../game/repositories/progress_repository.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../game/systems/quest_reward_service.dart';
 import '../../game/systems/quick_challenge_generator.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
+import '../../shared/widgets/hud_chip.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
 
@@ -268,16 +270,16 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _HudChip(
+            HudChip(
               text: '⭐ $_score',
               semanticLabel: '$_score rounds aced so far',
             ),
-            _HudChip(
+            HudChip(
               key: const ValueKey('round_timer'),
               text: '⏱️ $_secondsLeft',
               semanticLabel: '$_secondsLeft seconds left, no rush',
             ),
-            _HudChip(
+            HudChip(
               text: '${_roundNumber + 1} / ${widget.sessionLength}',
               semanticLabel:
                   'Round ${_roundNumber + 1} of ${widget.sessionLength}',
@@ -302,17 +304,9 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
           ),
         ],
         const SizedBox(height: 12),
-        SizedBox(
-          height: 48,
-          child: _feedback == null
-              ? null
-              : Text(
-                  _feedback!,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyLarge
-                      ?.copyWith(color: AppColors.gentleWarning),
-                ),
-        ),
+        _feedback == null
+            ? const SizedBox(height: 48)
+            : AnswerFeedbackBanner(message: _feedback!),
         ShakeWidget(
           shakeSignal: _shakeSignal,
           child: Wrap(
@@ -367,32 +361,6 @@ class _TileButton extends StatelessWidget {
         child: done
             ? const Icon(Icons.check_rounded, color: Colors.white, size: 40)
             : Text(label, style: const TextStyle(fontSize: 32)),
-      ),
-    );
-  }
-}
-
-class _HudChip extends StatelessWidget {
-  const _HudChip({
-    required this.text,
-    required this.semanticLabel,
-    super.key,
-  });
-
-  final String text;
-  final String semanticLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: semanticLabel,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Text(text, style: Theme.of(context).textTheme.titleLarge),
       ),
     );
   }

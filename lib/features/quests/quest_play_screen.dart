@@ -11,6 +11,7 @@ import '../../game/repositories/progress_repository.dart';
 import '../../game/repositories/quest_progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/systems/quest_engine.dart';
+import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/shake_widget.dart';
 import '../mini_games/math_dash_screen.dart';
@@ -266,28 +267,17 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
                       style: textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      height: 56,
-                      child: _feedback == null
-                          ? null
-                          : Column(
-                              children: [
-                                Text(
-                                  _feedback!,
-                                  textAlign: TextAlign.center,
-                                  style: textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.gentleWarning,
-                                  ),
-                                ),
-                                if (_hint != null)
-                                  Text(
-                                    '💡 $_hint',
-                                    textAlign: TextAlign.center,
-                                    style: textTheme.bodyMedium,
-                                  ),
-                              ],
-                            ),
-                    ),
+                    // Same fixed-box-couldn't-fit-two-lines bug that
+                    // overflowed in Memory Master — this is the core
+                    // quest challenge screen, so it's the highest-
+                    // traffic place to get it right. Reserves the same
+                    // resting height when idle; grows for real content.
+                    _feedback == null
+                        ? const SizedBox(height: 56)
+                        : AnswerFeedbackBanner(
+                            message: _feedback!,
+                            hintText: _hint,
+                          ),
                     const Spacer(),
                     ShakeWidget(
                       shakeSignal: _shakeSignal,

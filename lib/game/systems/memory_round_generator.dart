@@ -23,7 +23,41 @@ class MemoryRoundGenerator {
   /// section 6: 6–8 objects stay a later-architecture step).
   static const List<int> _itemCountByLevel = [0, 3, 4, 5, 5, 5];
 
+  /// The last round's type and (a short history of) its exact prompt —
+  /// tracked so [next] can steer away from immediate repeats. A child
+  /// playing a 5-round session noticing "Where was the rabbit?" twice,
+  /// or two position-recall rounds back to back, reads as the game
+  /// being broken even though each scene is freshly randomized; a
+  /// small bias against repeats fixes that without needing a much
+  /// bigger content pool.
+  MemoryQuestionType? _lastType;
+  final List<String> _recentPrompts = [];
+
+  /// How many retries [next] allows itself before giving up and
+  /// accepting whatever it generated — bounded so a small content pool
+  /// can never loop forever.
+  static const int _maxRepeatRetries = 8;
+
+  /// Next round for the session, biased away from repeating the
+  /// previous round's question type or exact prompt (see the fields
+  /// above). The underlying generation is [_generateOnce]; this is
+  /// purely the anti-repeat wrapper around it.
   MemoryRound next(int level) {
+    var round = _generateOnce(level);
+    for (var attempt = 0;
+        attempt < _maxRepeatRetries &&
+            (round.questionType == _lastType ||
+                _recentPrompts.contains(round.question.prompt));
+        attempt++) {
+      round = _generateOnce(level);
+    }
+    _lastType = round.questionType;
+    _recentPrompts.add(round.question.prompt);
+    if (_recentPrompts.length > 2) _recentPrompts.removeAt(0);
+    return round;
+  }
+
+  MemoryRound _generateOnce(int level) {
     switch (_random.nextInt(6)) {
       case 0:
       case 1:
