@@ -258,6 +258,12 @@ class _SettingsSectionState extends State<_SettingsSection> {
     setState(() {});
   }
 
+  Future<void> _setNarrationEnabled(bool value) async {
+    await _settings.setNarrationEnabled(value);
+    if (!mounted) return;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -288,6 +294,14 @@ class _SettingsSectionState extends State<_SettingsSection> {
           subtitle: const Text('Piano and Guitar notes'),
           value: _settings.instrumentSoundsEnabled,
           onChanged: _setInstrumentSoundsEnabled,
+        ),
+        SwitchListTile(
+          key: const ValueKey('narration_toggle'),
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Voice Narration'),
+          subtitle: const Text('Read questions and stories aloud'),
+          value: _settings.narrationEnabled,
+          onChanged: _setNarrationEnabled,
         ),
       ],
     );

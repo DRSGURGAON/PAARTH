@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/audio/speech_service.dart';
+import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
 import '../../shared/widgets/big_rounded_button.dart';
@@ -22,6 +24,19 @@ class QuestIntroScreen extends StatefulWidget {
 
 class _QuestIntroScreenState extends State<QuestIntroScreen> {
   bool _dialogueFinished = false;
+  SpeechService? _speech;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _speech ??= SpeechService(AppScope.of(context).storage);
+  }
+
+  @override
+  void dispose() {
+    _speech?.stop();
+    super.dispose();
+  }
 
   void _startAdventure() {
     Navigator.of(context).pushReplacement(
@@ -52,6 +67,7 @@ class _QuestIntroScreenState extends State<QuestIntroScreen> {
                 StoryDialogue(
                   npc: quest.npc,
                   lines: quest.effectiveIntroDialogue,
+                  speech: _speech,
                   onFinished: () => setState(() => _dialogueFinished = true),
                 )
               else ...[

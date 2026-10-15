@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/audio/feedback_service.dart';
 import '../../core/audio/sound_event.dart';
+import '../../core/audio/speech_service.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/companion_catalog.dart';
@@ -22,8 +23,10 @@ import '../../game/systems/quest_reward_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
+import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
+import '../../shared/widgets/speaker_button.dart';
 
 /// Pattern Power — "Spot the pattern. Unlock the adventure!" The jungle
 /// lock shows a themed pattern (colors, shapes, animals, objects, or
@@ -66,6 +69,7 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
   late FeedbackService _feedbackService;
+  late SpeechService _speech;
   late bool _foxActive;
   bool _loaded = false;
 
@@ -105,6 +109,7 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
     _feedbackService = FeedbackService(storage);
+    _speech = SpeechService(storage);
     _foxActive =
         CompanionRepository(storage).selectedCompanionId == CompanionIds.fox;
     _loaded = true;
@@ -133,12 +138,19 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
+  }
+
   void _nextQuestion() {
     _level = _tracker.levelFor(ChallengeCategory.logic);
     _question = _generator.next(_level);
     _firstAttempt = true;
     _companionHintUsed = false;
     _eliminatedOptions.clear();
+    _speech.speak(_question.prompt);
   }
 
   /// Fox's help: crosses out the first wrong-and-not-yet-eliminated
@@ -284,6 +296,12 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
           questionNumber: _questionNumber,
           total: widget.sessionLength,
         ),
+        const SizedBox(height: 10),
+        LessonProgressBar(
+          current: _questionNumber,
+          total: widget.sessionLength,
+          color: AppColors.grapePurple,
+        ),
         const Spacer(),
         _JungleLock(
           key: ValueKey('pattern_lock_${_question.id}'),
@@ -291,10 +309,19 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
           justUnlocked: _justUnlocked,
         ),
         const SizedBox(height: 16),
-        Text(
-          _question.prompt,
-          textAlign: TextAlign.center,
-          style: textTheme.headlineMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                _question.prompt,
+                textAlign: TextAlign.center,
+                style: textTheme.headlineMedium,
+              ),
+            ),
+            const SizedBox(width: 10),
+            SpeakerButton(speech: _speech, text: _question.prompt),
+          ],
         ),
         const SizedBox(height: 12),
         // Same reserve-then-grow approach as Math Dash's feedback area

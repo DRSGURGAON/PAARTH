@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/audio/feedback_service.dart';
 import '../../core/audio/sound_event.dart';
+import '../../core/audio/speech_service.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/companion_catalog.dart';
@@ -20,8 +21,10 @@ import '../../game/systems/quick_challenge_generator.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
+import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
+import '../../shared/widgets/speaker_button.dart';
 
 /// Quick Challenge — "Fast fingers, quick eyes!" Short tap / count /
 /// match / avoid rounds from the brief's section 21 (ten authored
@@ -61,6 +64,7 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
   late FeedbackService _feedbackService;
+  late SpeechService _speech;
   late bool _cheetahActive;
   bool _loaded = false;
 
@@ -99,6 +103,7 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
     _feedbackService = FeedbackService(storage);
+    _speech = SpeechService(storage);
     _cheetahActive = CompanionRepository(storage).selectedCompanionId ==
         CompanionIds.cheetah;
     _loaded = true;
@@ -107,6 +112,7 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _speech.stop();
     super.dispose();
   }
 
@@ -128,6 +134,7 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
     _roundClean = true;
     _feedback = null;
     _restartTimer();
+    _speech.speak(_round.instruction);
   }
 
   void _restartTimer() {
@@ -286,11 +293,26 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        LessonProgressBar(
+          current: _roundNumber,
+          total: widget.sessionLength,
+          color: AppColors.coral,
+        ),
         const Spacer(),
-        Text(
-          _round.instruction,
-          textAlign: TextAlign.center,
-          style: textTheme.headlineMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                _round.instruction,
+                textAlign: TextAlign.center,
+                style: textTheme.headlineMedium,
+              ),
+            ),
+            const SizedBox(width: 10),
+            SpeakerButton(speech: _speech, text: _round.instruction),
+          ],
         ),
         if (_round.visual != null) ...[
           const SizedBox(height: 12),

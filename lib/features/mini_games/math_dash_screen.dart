@@ -21,11 +21,14 @@ import '../../game/systems/math_hint_service.dart';
 import '../../game/systems/math_question_generator.dart';
 import '../../game/systems/quest_engine.dart';
 import '../../game/systems/quest_reward_service.dart';
+import '../../core/audio/speech_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
+import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
+import '../../shared/widgets/speaker_button.dart';
 import '../player/hero_avatar_preview.dart';
 
 /// Math Dash — "Solve it. Collect it. Keep moving!" A session of
@@ -75,6 +78,7 @@ class MathDashScreenState extends State<MathDashScreen> {
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
   late FeedbackService _feedbackService;
+  late SpeechService _speech;
   late HeroProfile _heroProfile;
   late bool _robotActive;
   bool _loaded = false;
@@ -116,6 +120,7 @@ class MathDashScreenState extends State<MathDashScreen> {
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
     _feedbackService = FeedbackService(storage);
+    _speech = SpeechService(storage);
     _heroProfile = HeroRepository(storage).load();
     _robotActive =
         CompanionRepository(storage).selectedCompanionId == CompanionIds.robot;
@@ -126,6 +131,12 @@ class MathDashScreenState extends State<MathDashScreen> {
       _resetSession();
       _phase = _DashPhase.playing;
     }
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
   }
 
   void _resetSession() {
@@ -152,6 +163,7 @@ class MathDashScreenState extends State<MathDashScreen> {
     _firstAttempt = true;
     _companionHintUsed = false;
     _eliminatedOptions.clear();
+    _speech.speak(_question.prompt);
   }
 
   /// Robot's help: crosses out the first wrong-and-not-yet-eliminated
@@ -296,6 +308,12 @@ class MathDashScreenState extends State<MathDashScreen> {
           questionNumber: _questionNumber,
           total: widget.sessionLength,
         ),
+        const SizedBox(height: 10),
+        LessonProgressBar(
+          current: _questionNumber,
+          total: widget.sessionLength,
+          color: AppColors.skyBlue,
+        ),
         const Spacer(),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -318,10 +336,19 @@ class MathDashScreenState extends State<MathDashScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        Text(
-          _question.prompt,
-          textAlign: TextAlign.center,
-          style: textTheme.headlineMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                _question.prompt,
+                textAlign: TextAlign.center,
+                style: textTheme.headlineMedium,
+              ),
+            ),
+            const SizedBox(width: 10),
+            SpeakerButton(speech: _speech, text: _question.prompt),
+          ],
         ),
         const SizedBox(height: 12),
         // Reserves the same resting height as before when there's no

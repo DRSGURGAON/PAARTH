@@ -680,6 +680,38 @@ finish:
   environment — run `flutter analyze` and `flutter test` locally and
   report anything red
 
+**Duolingo-style voice + feedback pass** — after a round of device
+testing, the game got a read-aloud voice, a friendlier wrong-answer
+panel, and a lesson progress bar, taking cues from Duolingo:
+
+- **Voice narration** — a new `SpeechService` (one file wrapping
+  `flutter_tts`, the only place it is touched) reads each prompt,
+  question and story line aloud in a gentle child-paced voice, and a
+  round 🔊 **Speaker** button lets the child hear it again. Emoji and
+  symbols are stripped before speaking, so a 🍌🍌🍌 visual never becomes
+  "banana banana banana" and "⭐" is never pronounced. Word Builder is
+  deliberately left silent (speaking the word would give away the
+  spelling). A new Parent Zone **Voice Narration** toggle controls it,
+  on top of the master sound switch; like every audio path it is a safe
+  no-op where no TTS engine exists, so tests and silent devices are
+  unaffected.
+- **Friendlier feedback, no more "yellow strip"** — the wrong-answer
+  banner was a thin yellow-bordered card that read as a harsh strip on
+  every miss. It is now a soft coral panel that slides and fades up
+  into place with a friendly 💪 icon and a bold message — one warm,
+  consistent look everywhere a miss happens (every mini-game, the quest
+  screen, the parent gate).
+- **Lesson progress bar** — each mini-game (and Word Builder) now shows
+  Duolingo's signature chunky progress bar at the top, filling smoothly
+  as the child advances, for a clear sense of momentum the bare "N / M"
+  chip didn't give.
+- New dependency: `flutter_tts` (isolated behind `SpeechService`), the
+  second package added since Phase 1. New tests: `SpeechService`
+  gating + emoji-stripping, and the narration setting's default and
+  persistence.
+- Same honest limit: no Flutter SDK here — run `flutter pub get`,
+  `flutter analyze` and `flutter test` locally after pulling.
+
 ## First-time setup
 
 This repo currently ships **only the Dart application source**

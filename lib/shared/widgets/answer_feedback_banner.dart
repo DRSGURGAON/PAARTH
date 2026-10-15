@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// A soft, rounded card for the gentle "wrong answer" moment: the
-/// encouragement message, an optional hint line/visual, and an
-/// optional action (Memory Master's "Look again", say) — all sized to
-/// their real content instead of a fixed-height box.
+/// The gentle "not quite — try again" moment, redesigned to feel like
+/// Duolingo's answer feedback: a warm, filled, rounded panel that
+/// slides and fades up into place, with a friendly round icon, a bold
+/// message and (optionally) a hint and an inline action.
 ///
-/// Every mini-game used to float this as bare colored text inside a
-/// fixed-height `SizedBox`, which looked plain and, in Memory Master,
-/// genuinely overflowed: the encouragement text can wrap to two lines
-/// on some devices, and that screen additionally nested a full button
-/// inside the same fixed box. Centralizing the card here fixes both
-/// problems at once — a real container that grows with its content —
-/// and gives every miss the same warm, designed look across the app.
+/// It replaced an earlier version that floated bare text inside a thin
+/// yellow-bordered card — which read as a harsh "yellow strip" on every
+/// wrong answer. This one is a soft coral panel (never red/alarming for
+/// a young child), sized to its own content so it can never overflow,
+/// and shared by every screen so one warm, consistent look appears
+/// everywhere a miss happens.
 class AnswerFeedbackBanner extends StatelessWidget {
   const AnswerFeedbackBanner({
     required this.message,
@@ -33,7 +32,7 @@ class AnswerFeedbackBanner extends StatelessWidget {
   final String? hintVisual;
 
   /// Optional action shown under the message (e.g. a "Look again"
-  /// button) — part of the card's own content, so it can never be
+  /// button) — part of the panel's own content, so it can never be
   /// clipped by a separately-sized container around it.
   final Widget? action;
 
@@ -41,53 +40,88 @@ class AnswerFeedbackBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.gentleWarning.withValues(alpha: 0.35),
-          width: 1.5,
+    // One-shot slide-up + fade on mount. The caller swaps a reserved
+    // SizedBox for this banner the moment feedback appears, so the
+    // widget mounts fresh each miss and the entrance plays every time.
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      tween: Tween(begin: 0, end: 1),
+      builder: (context, t, child) => Opacity(
+        opacity: t.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 18),
+          child: child,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.gentleWarning.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: textTheme.bodyLarge?.copyWith(color: AppColors.gentleWarning),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1EC), // soft coral tint
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: AppColors.coral.withValues(alpha: 0.45),
+            width: 2,
           ),
-          if (hintText != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              '💡 $hintText',
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.coral.withValues(alpha: 0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
-          if (hintVisual != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              hintVisual!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppColors.coral,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text('💪', style: TextStyle(fontSize: 22)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: AppColors.coral,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
             ),
+            if (hintText != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                '💡 $hintText',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium,
+              ),
+            ],
+            if (hintVisual != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                hintVisual!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+            if (action != null) ...[
+              const SizedBox(height: 6),
+              action!,
+            ],
           ],
-          if (action != null) ...[
-            const SizedBox(height: 2),
-            action!,
-          ],
-        ],
+        ),
       ),
     );
   }

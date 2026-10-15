@@ -24,6 +24,12 @@ dependencies:
   # for another audio backend in one file.
   audioplayers: ^6.1.0
 
+  # Reads prompts, questions and story lines aloud (early-reader
+  # support, Duolingo-style read-aloud). Wrapped behind
+  # core/audio/speech_service.dart so no widget touches the package and
+  # the TTS backend could be swapped in one file.
+  flutter_tts: ^4.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

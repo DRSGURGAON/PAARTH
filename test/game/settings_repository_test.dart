@@ -5,11 +5,24 @@ import '../support/fake_local_storage_service.dart';
 
 void main() {
   group('SettingsRepository', () {
-    test('sound and haptics default to enabled', () {
+    test('sound, haptics, instrument sounds and narration default to '
+        'enabled', () {
       final repository = SettingsRepository(FakeLocalStorageService());
 
       expect(repository.soundEnabled, isTrue);
       expect(repository.hapticsEnabled, isTrue);
+      expect(repository.instrumentSoundsEnabled, isTrue);
+      expect(repository.narrationEnabled, isTrue);
+    });
+
+    test('setNarrationEnabled() persists independently', () async {
+      final repository = SettingsRepository(FakeLocalStorageService());
+
+      await repository.setNarrationEnabled(false);
+
+      expect(repository.narrationEnabled, isFalse);
+      expect(repository.soundEnabled, isTrue);
+      expect(repository.instrumentSoundsEnabled, isTrue);
     });
 
     test('setSoundEnabled() persists independently of haptics', () async {

@@ -11,9 +11,11 @@ import '../../game/repositories/progress_repository.dart';
 import '../../game/repositories/quest_progress_repository.dart';
 import '../../game/repositories/quest_repository.dart';
 import '../../game/systems/quest_engine.dart';
+import '../../core/audio/speech_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/shake_widget.dart';
+import '../../shared/widgets/speaker_button.dart';
 import '../mini_games/math_dash_screen.dart';
 import '../mini_games/memory_master_screen.dart';
 import '../mini_games/pattern_power_screen.dart';
@@ -40,6 +42,7 @@ class QuestPlayScreen extends StatefulWidget {
 class _QuestPlayScreenState extends State<QuestPlayScreen> {
   late QuestEngine _engine;
   late FeedbackService _feedbackService;
+  late SpeechService _speech;
   bool _loaded = false;
   String? _feedback;
   String? _hint;
@@ -64,8 +67,25 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
       questProgressRepository: QuestProgressRepository(storage),
     );
     _feedbackService = FeedbackService(storage);
+    _speech = SpeechService(storage);
     _studying = !_engine.isComplete && _engine.currentChallenge is MemoryChallenge;
     _loaded = true;
+    _speakCurrentPrompt();
+  }
+
+  /// Reads the current challenge's prompt aloud (early-reader support),
+  /// but only for the tap-an-answer challenges — embedded mini-games
+  /// narrate themselves, and the memory study phase speaks on "ready".
+  void _speakCurrentPrompt() {
+    if (_engine.isComplete || _studying) return;
+    final challenge = _engine.currentChallenge;
+    if (challenge is ChoiceChallenge) _speech.speak(challenge.prompt);
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
   }
 
   Future<void> _submit(int optionIndex) async {
@@ -94,6 +114,7 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
           setState(() {
             _studying = _engine.currentChallenge is MemoryChallenge;
           });
+          _speakCurrentPrompt();
         }
       case AnswerResult.completed:
         _feedbackService.play(SoundEvent.correct);
@@ -261,10 +282,19 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    Text(
-                      challenge.prompt,
-                      textAlign: TextAlign.center,
-                      style: textTheme.headlineMedium,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            challenge.prompt,
+                            textAlign: TextAlign.center,
+                            style: textTheme.headlineMedium,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        SpeakerButton(speech: _speech, text: challenge.prompt),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     // Same fixed-box-couldn't-fit-two-lines bug that

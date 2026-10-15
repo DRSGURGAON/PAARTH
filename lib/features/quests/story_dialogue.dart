@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/audio/speech_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/models/quest.dart';
 import '../../shared/widgets/pop_in.dart';
@@ -13,6 +14,7 @@ class StoryDialogue extends StatefulWidget {
     required this.lines,
     required this.onFinished,
     this.npc,
+    this.speech,
     super.key,
   });
 
@@ -25,12 +27,27 @@ class StoryDialogue extends StatefulWidget {
   /// The speaking character; null shows a generic storybook narrator.
   final QuestNpc? npc;
 
+  /// Optional narrator — when provided, each line is read aloud as it
+  /// appears (storybook feel). Null (e.g. in isolated widget tests)
+  /// keeps the dialogue silent.
+  final SpeechService? speech;
+
   @override
   State<StoryDialogue> createState() => _StoryDialogueState();
 }
 
 class _StoryDialogueState extends State<StoryDialogue> {
   int _step = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _speakCurrent();
+  }
+
+  void _speakCurrent() {
+    if (_step < widget.lines.length) widget.speech?.speak(widget.lines[_step]);
+  }
 
   bool get _isLastLine => _step >= widget.lines.length - 1;
 
@@ -39,6 +56,7 @@ class _StoryDialogueState extends State<StoryDialogue> {
       widget.onFinished();
     } else {
       setState(() => _step++);
+      _speakCurrent();
     }
   }
 

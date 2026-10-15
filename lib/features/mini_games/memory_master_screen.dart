@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/audio/feedback_service.dart';
 import '../../core/audio/sound_event.dart';
+import '../../core/audio/speech_service.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/theme/app_colors.dart';
 import '../../game/data/companion_catalog.dart';
@@ -21,8 +22,10 @@ import '../../game/systems/quest_reward_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
+import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
+import '../../shared/widgets/speaker_button.dart';
 
 /// Memory Master — "Remember it. Find it. Win it!" Jungle friends
 /// appear at named scene spots, hide, then a question asks what was
@@ -64,6 +67,7 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
   late CoinRepository _coinRepository;
   late MiniGameRepository _miniGameRepository;
   late FeedbackService _feedbackService;
+  late SpeechService _speech;
   late bool _pandaActive;
   bool _loaded = false;
 
@@ -106,6 +110,7 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
     _coinRepository = CoinRepository(storage);
     _miniGameRepository = MiniGameRepository(storage);
     _feedbackService = FeedbackService(storage);
+    _speech = SpeechService(storage);
     _pandaActive =
         CompanionRepository(storage).selectedCompanionId == CompanionIds.panda;
     _loaded = true;
@@ -154,7 +159,14 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
         return;
       }
       setState(() => _phase = _RoundPhase.answering);
+      _speech.speak(_round.question.prompt);
     });
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
   }
 
   /// The once-per-round memory hint: a short second look at the scene,
@@ -352,11 +364,26 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildHud(),
+        const SizedBox(height: 10),
+        LessonProgressBar(
+          current: _roundNumber,
+          total: widget.sessionLength,
+          color: AppColors.coral,
+        ),
         const Spacer(),
-        Text(
-          question.prompt,
-          textAlign: TextAlign.center,
-          style: textTheme.headlineMedium,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                question.prompt,
+                textAlign: TextAlign.center,
+                style: textTheme.headlineMedium,
+              ),
+            ),
+            const SizedBox(width: 10),
+            SpeakerButton(speech: _speech, text: question.prompt),
+          ],
         ),
         const SizedBox(height: 12),
         // Real bug fix: this used to be a fixed 56px box holding BOTH
