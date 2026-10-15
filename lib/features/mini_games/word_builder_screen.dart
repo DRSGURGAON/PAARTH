@@ -18,7 +18,6 @@ import '../../game/systems/quest_engine.dart';
 import '../../game/systems/word_puzzle_generator.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
-import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 
 /// One scrambled letter tile. Carries a stable [id] (its original
@@ -224,12 +223,6 @@ class WordBuilderScreenState extends State<WordBuilderScreen> {
           'Word ${_roundNumber + 1} of ${WordBuilderScreen.roundLength}',
           textAlign: TextAlign.center,
           style: textTheme.titleLarge,
-        ),
-        const SizedBox(height: 10),
-        LessonProgressBar(
-          current: _roundNumber,
-          total: WordBuilderScreen.roundLength,
-          color: AppColors.leafGreen,
         ),
         const Spacer(),
         Text(

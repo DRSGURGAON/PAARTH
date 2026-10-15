@@ -46,7 +46,7 @@ class _StoryDialogueState extends State<StoryDialogue> {
   }
 
   void _speakCurrent() {
-    if (_step < widget.lines.length) widget.speech?.speak(widget.lines[_step]);
+    if (_step < widget.lines.length) widget.speech?.speakAuto(widget.lines[_step]);
   }
 
   bool get _isLastLine => _step >= widget.lines.length - 1;

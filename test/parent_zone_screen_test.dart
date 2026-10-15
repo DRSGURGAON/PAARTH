@@ -12,6 +12,7 @@ import 'package:super_kid_adventure/game/repositories/coin_repository.dart';
 import 'package:super_kid_adventure/game/repositories/hero_repository.dart';
 import 'package:super_kid_adventure/game/repositories/play_time_repository.dart';
 import 'package:super_kid_adventure/game/repositories/quest_repository.dart';
+import 'package:super_kid_adventure/game/repositories/settings_repository.dart';
 import 'package:super_kid_adventure/game/systems/difficulty_tracker.dart';
 
 import 'support/fake_local_storage_service.dart';
@@ -82,6 +83,8 @@ void main() {
 
     await tester.pumpWidget(buildHarness(storage));
 
+    await tester.ensureVisible(
+        find.byKey(const ValueKey('reset_progress_button')));
     await tester.tap(find.byKey(const ValueKey('reset_progress_button')));
     await tester.pumpAndSettle();
     expect(find.text('Reset All Progress?'), findsOneWidget);
@@ -105,6 +108,8 @@ void main() {
 
     await tester.pumpWidget(buildHarness(storage));
 
+    await tester.ensureVisible(
+        find.byKey(const ValueKey('reset_progress_button')));
     await tester.tap(find.byKey(const ValueKey('reset_progress_button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('confirm_reset_button')));
@@ -119,5 +124,50 @@ void main() {
     // now-wiped dashboard.
     expect(find.text('PLAY'), findsOneWidget);
     expect(find.text('Parent Zone'), findsNothing);
+  });
+
+  testWidgets('voice options appear under narration and a chosen voice '
+      'persists', (tester) async {
+    final storage = FakeLocalStorageService();
+    await tester.pumpWidget(buildHarness(storage));
+
+    // Narration is on by default, so the reading-voice picker shows.
+    final womanChip = find.byKey(const ValueKey('voice_choice_woman'));
+    await tester.ensureVisible(womanChip);
+    await tester.tap(womanChip);
+    await tester.pumpAndSettle();
+
+    expect(SettingsRepository(storage).voiceCharacter, 'woman');
+  });
+
+  testWidgets('auto-read defaults off and can be turned on', (tester) async {
+    final storage = FakeLocalStorageService();
+    expect(SettingsRepository(storage).autoNarrationEnabled, isFalse);
+
+    await tester.pumpWidget(buildHarness(storage));
+
+    final autoToggle = find.byKey(const ValueKey('auto_narration_toggle'));
+    await tester.ensureVisible(autoToggle);
+    await tester.tap(autoToggle);
+    await tester.pumpAndSettle();
+
+    expect(SettingsRepository(storage).autoNarrationEnabled, isTrue);
+  });
+
+  testWidgets('turning Voice Narration off hides the voice options',
+      (tester) async {
+    final storage = FakeLocalStorageService();
+    await tester.pumpWidget(buildHarness(storage));
+
+    expect(find.byKey(const ValueKey('voice_choice_kid')), findsOneWidget);
+
+    final narrationToggle = find.byKey(const ValueKey('narration_toggle'));
+    await tester.ensureVisible(narrationToggle);
+    await tester.tap(narrationToggle);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('voice_choice_kid')), findsNothing);
+    expect(
+        find.byKey(const ValueKey('auto_narration_toggle')), findsNothing);
   });
 }

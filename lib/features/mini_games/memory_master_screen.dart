@@ -22,10 +22,8 @@ import '../../game/systems/quest_reward_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
-import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
-import '../../shared/widgets/speaker_button.dart';
 
 /// Memory Master — "Remember it. Find it. Win it!" Jungle friends
 /// appear at named scene spots, hide, then a question asks what was
@@ -159,7 +157,7 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
         return;
       }
       setState(() => _phase = _RoundPhase.answering);
-      _speech.speak(_round.question.prompt);
+      _speech.speakAuto(_round.question.prompt);
     });
   }
 
@@ -168,6 +166,14 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
     _speech.stop();
     super.dispose();
   }
+
+  Widget _speakerAction(String text) => IconButton(
+    key: const ValueKey('speaker_button'),
+    tooltip: 'Hear it again',
+    icon: const Icon(Icons.volume_up_rounded),
+    onPressed: () => _speech.speak(text),
+  );
+
 
   /// The once-per-round memory hint: a short second look at the scene,
   /// then back to the question (brief: hints help the child understand
@@ -257,7 +263,12 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Memory Master')),
+      appBar: AppBar(
+        title: const Text('Memory Master'),
+        actions: _phase == _RoundPhase.answering && _speech.voiceOn
+            ? [_speakerAction(_round.question.prompt)]
+            : null,
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -364,26 +375,11 @@ class MemoryMasterScreenState extends State<MemoryMasterScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildHud(),
-        const SizedBox(height: 10),
-        LessonProgressBar(
-          current: _roundNumber,
-          total: widget.sessionLength,
-          color: AppColors.coral,
-        ),
         const Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                question.prompt,
-                textAlign: TextAlign.center,
-                style: textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(width: 10),
-            SpeakerButton(speech: _speech, text: question.prompt),
-          ],
+        Text(
+          question.prompt,
+          textAlign: TextAlign.center,
+          style: textTheme.headlineMedium,
         ),
         const SizedBox(height: 12),
         // Real bug fix: this used to be a fixed 56px box holding BOTH

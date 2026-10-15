@@ -15,7 +15,6 @@ import '../../core/audio/speech_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/shake_widget.dart';
-import '../../shared/widgets/speaker_button.dart';
 import '../mini_games/math_dash_screen.dart';
 import '../mini_games/memory_master_screen.dart';
 import '../mini_games/pattern_power_screen.dart';
@@ -79,7 +78,7 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
   void _speakCurrentPrompt() {
     if (_engine.isComplete || _studying) return;
     final challenge = _engine.currentChallenge;
-    if (challenge is ChoiceChallenge) _speech.speak(challenge.prompt);
+    if (challenge is ChoiceChallenge) _speech.speakAuto(challenge.prompt);
   }
 
   @override
@@ -87,6 +86,23 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
     _speech.stop();
     super.dispose();
   }
+
+  List<Widget>? _speakerActions() {
+    if (!_speech.voiceOn || _engine.isComplete || _studying) return null;
+    final challenge = _engine.currentChallenge;
+    if (challenge is ChoiceChallenge || challenge is MemoryChallenge) {
+      return [
+        IconButton(
+          key: const ValueKey('speaker_button'),
+          tooltip: 'Hear it again',
+          icon: const Icon(Icons.volume_up_rounded),
+          onPressed: () => _speech.speak(challenge.prompt),
+        ),
+      ];
+    }
+    return null;
+  }
+
 
   Future<void> _submit(int optionIndex) async {
     final challenge = _engine.currentChallenge;
@@ -199,7 +215,10 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.quest.title)),
+      appBar: AppBar(
+        title: Text(widget.quest.title),
+        actions: _speakerActions(),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -282,19 +301,10 @@ class _QuestPlayScreenState extends State<QuestPlayScreen> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            challenge.prompt,
-                            textAlign: TextAlign.center,
-                            style: textTheme.headlineMedium,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        SpeakerButton(speech: _speech, text: challenge.prompt),
-                      ],
+                    Text(
+                      challenge.prompt,
+                      textAlign: TextAlign.center,
+                      style: textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 12),
                     // Same fixed-box-couldn't-fit-two-lines bug that

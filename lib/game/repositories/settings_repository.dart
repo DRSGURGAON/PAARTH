@@ -13,6 +13,8 @@ class SettingsRepository {
   static const String _hapticsEnabledKey = 'settings_haptics_enabled_v1';
   static const String _instrumentSoundsKey = 'settings_instrument_sounds_v1';
   static const String _narrationKey = 'settings_narration_v1';
+  static const String _autoNarrationKey = 'settings_auto_narration_v1';
+  static const String _voiceCharacterKey = 'settings_voice_character_v1';
 
   bool get soundEnabled => _storage.getBool(_soundEnabledKey) ?? true;
   bool get hapticsEnabled => _storage.getBool(_hapticsEnabledKey) ?? true;
@@ -30,6 +32,20 @@ class SettingsRepository {
   /// Still also gated by the master [soundEnabled] switch.
   bool get narrationEnabled => _storage.getBool(_narrationKey) ?? true;
 
+  /// When on, prompts are read aloud the moment they appear. When off
+  /// (the default — a calmer experience), nothing speaks on its own and
+  /// the child taps the 🔊 speaker to hear a question. Only matters when
+  /// [narrationEnabled] is also on.
+  bool get autoNarrationEnabled =>
+      _storage.getBool(_autoNarrationKey) ?? false;
+
+  /// Which reading voice to use: 'kid', 'woman' or 'man'. Shaped by
+  /// pitch/rate so it sounds distinct on every device (see
+  /// `SpeechService`), rather than depending on which system voices a
+  /// particular phone happens to have installed. Defaults to the kid
+  /// voice, which suits the game best.
+  String get voiceCharacter => _storage.getString(_voiceCharacterKey) ?? 'kid';
+
   Future<void> setSoundEnabled(bool enabled) {
     return _storage.setBool(_soundEnabledKey, enabled);
   }
@@ -44,5 +60,13 @@ class SettingsRepository {
 
   Future<void> setNarrationEnabled(bool enabled) {
     return _storage.setBool(_narrationKey, enabled);
+  }
+
+  Future<void> setAutoNarrationEnabled(bool enabled) {
+    return _storage.setBool(_autoNarrationKey, enabled);
+  }
+
+  Future<void> setVoiceCharacter(String value) {
+    return _storage.setString(_voiceCharacterKey, value);
   }
 }

@@ -50,6 +50,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('the read-aloud speaker appears in the app bar while playing',
+      (tester) async {
+    await tester.pumpWidget(await buildHarness());
+    // Not shown on the intro screen.
+    expect(find.byKey(const ValueKey('speaker_button')), findsNothing);
+
+    await tester.tap(find.text("Let's Go!"));
+    await tester.pumpAndSettle();
+
+    // Voice narration is on by default, so the speaker is offered.
+    expect(find.byKey(const ValueKey('speaker_button')), findsOneWidget);
+  });
+
   testWidgets('a perfect session earns the star plus the perfect-streak '
       'coin bonus', (tester) async {
     await tester.pumpWidget(await buildHarness());

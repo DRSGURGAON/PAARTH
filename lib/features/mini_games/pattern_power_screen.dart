@@ -23,10 +23,8 @@ import '../../game/systems/quest_reward_service.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
-import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
-import '../../shared/widgets/speaker_button.dart';
 
 /// Pattern Power — "Spot the pattern. Unlock the adventure!" The jungle
 /// lock shows a themed pattern (colors, shapes, animals, objects, or
@@ -144,13 +142,21 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
     super.dispose();
   }
 
+  Widget _speakerAction(String text) => IconButton(
+    key: const ValueKey('speaker_button'),
+    tooltip: 'Hear it again',
+    icon: const Icon(Icons.volume_up_rounded),
+    onPressed: () => _speech.speak(text),
+  );
+
+
   void _nextQuestion() {
     _level = _tracker.levelFor(ChallengeCategory.logic);
     _question = _generator.next(_level);
     _firstAttempt = true;
     _companionHintUsed = false;
     _eliminatedOptions.clear();
-    _speech.speak(_question.prompt);
+    _speech.speakAuto(_question.prompt);
   }
 
   /// Fox's help: crosses out the first wrong-and-not-yet-eliminated
@@ -251,7 +257,12 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pattern Power')),
+      appBar: AppBar(
+        title: const Text('Pattern Power'),
+        actions: _phase == _RoundPhase.playing && _speech.voiceOn
+            ? [_speakerAction(_question.prompt)]
+            : null,
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -296,12 +307,6 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
           questionNumber: _questionNumber,
           total: widget.sessionLength,
         ),
-        const SizedBox(height: 10),
-        LessonProgressBar(
-          current: _questionNumber,
-          total: widget.sessionLength,
-          color: AppColors.grapePurple,
-        ),
         const Spacer(),
         _JungleLock(
           key: ValueKey('pattern_lock_${_question.id}'),
@@ -309,19 +314,10 @@ class PatternPowerScreenState extends State<PatternPowerScreen> {
           justUnlocked: _justUnlocked,
         ),
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                _question.prompt,
-                textAlign: TextAlign.center,
-                style: textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(width: 10),
-            SpeakerButton(speech: _speech, text: _question.prompt),
-          ],
+        Text(
+          _question.prompt,
+          textAlign: TextAlign.center,
+          style: textTheme.headlineMedium,
         ),
         const SizedBox(height: 12),
         // Same reserve-then-grow approach as Math Dash's feedback area

@@ -5,14 +5,27 @@ import '../support/fake_local_storage_service.dart';
 
 void main() {
   group('SettingsRepository', () {
-    test('sound, haptics, instrument sounds and narration default to '
-        'enabled', () {
+    test('audio toggles default sensibly: effects/haptics/instruments/'
+        'narration on, auto-read off, kid voice', () {
       final repository = SettingsRepository(FakeLocalStorageService());
 
       expect(repository.soundEnabled, isTrue);
       expect(repository.hapticsEnabled, isTrue);
       expect(repository.instrumentSoundsEnabled, isTrue);
       expect(repository.narrationEnabled, isTrue);
+      // Calm by default: the child taps the speaker to hear a question.
+      expect(repository.autoNarrationEnabled, isFalse);
+      expect(repository.voiceCharacter, 'kid');
+    });
+
+    test('auto-read and voice character persist across instances', () async {
+      final storage = FakeLocalStorageService();
+      await SettingsRepository(storage).setAutoNarrationEnabled(true);
+      await SettingsRepository(storage).setVoiceCharacter('woman');
+
+      final fresh = SettingsRepository(storage);
+      expect(fresh.autoNarrationEnabled, isTrue);
+      expect(fresh.voiceCharacter, 'woman');
     });
 
     test('setNarrationEnabled() persists independently', () async {

@@ -21,10 +21,8 @@ import '../../game/systems/quick_challenge_generator.dart';
 import '../../shared/widgets/answer_feedback_banner.dart';
 import '../../shared/widgets/big_rounded_button.dart';
 import '../../shared/widgets/hud_chip.dart';
-import '../../shared/widgets/lesson_progress_bar.dart';
 import '../../shared/widgets/pop_in.dart';
 import '../../shared/widgets/shake_widget.dart';
-import '../../shared/widgets/speaker_button.dart';
 
 /// Quick Challenge — "Fast fingers, quick eyes!" Short tap / count /
 /// match / avoid rounds from the brief's section 21 (ten authored
@@ -116,6 +114,14 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
     super.dispose();
   }
 
+  Widget _speakerAction(String text) => IconButton(
+    key: const ValueKey('speaker_button'),
+    tooltip: 'Hear it again',
+    icon: const Icon(Icons.volume_up_rounded),
+    onPressed: () => _speech.speak(text),
+  );
+
+
   void _startSession() {
     setState(() {
       _roundNumber = 0;
@@ -134,7 +140,7 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
     _roundClean = true;
     _feedback = null;
     _restartTimer();
-    _speech.speak(_round.instruction);
+    _speech.speakAuto(_round.instruction);
   }
 
   void _restartTimer() {
@@ -235,7 +241,12 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Quick Challenge')),
+      appBar: AppBar(
+        title: const Text('Quick Challenge'),
+        actions: _phase == _RoundPhase.playing && _speech.voiceOn
+            ? [_speakerAction(_round.instruction)]
+            : null,
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -293,26 +304,11 @@ class QuickChallengeScreenState extends State<QuickChallengeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        LessonProgressBar(
-          current: _roundNumber,
-          total: widget.sessionLength,
-          color: AppColors.coral,
-        ),
         const Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                _round.instruction,
-                textAlign: TextAlign.center,
-                style: textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(width: 10),
-            SpeakerButton(speech: _speech, text: _round.instruction),
-          ],
+        Text(
+          _round.instruction,
+          textAlign: TextAlign.center,
+          style: textTheme.headlineMedium,
         ),
         if (_round.visual != null) ...[
           const SizedBox(height: 12),

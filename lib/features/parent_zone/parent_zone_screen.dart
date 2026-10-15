@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/audio/speech_service.dart';
 import '../../core/di/app_scope.dart';
 import '../../core/navigation/route_names.dart';
 import '../../core/theme/app_colors.dart';
@@ -230,14 +231,51 @@ class _SettingsSection extends StatefulWidget {
 
 class _SettingsSectionState extends State<_SettingsSection> {
   late SettingsRepository _settings;
+  late SpeechService _speech;
   bool _loaded = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_loaded) return;
-    _settings = SettingsRepository(AppScope.of(context).storage);
+    final storage = AppScope.of(context).storage;
+    _settings = SettingsRepository(storage);
+    _speech = SpeechService(storage);
     _loaded = true;
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    super.dispose();
+  }
+
+  static const Map<String, (String, String)> _voiceLabels = {
+    'kid': ('🧒', 'Kid'),
+    'woman': ('👩', 'Woman'),
+    'man': ('👨', 'Man'),
+  };
+
+  static const String _voiceSample =
+      "Hi! I'm your reading buddy. Let's play and learn together!";
+
+  Future<void> _setNarrationEnabled(bool value) async {
+    await _settings.setNarrationEnabled(value);
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _setAutoNarrationEnabled(bool value) async {
+    await _settings.setAutoNarrationEnabled(value);
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _selectVoice(String character) async {
+    await _settings.setVoiceCharacter(character);
+    if (!mounted) return;
+    setState(() {});
+    _speech.speak(_voiceSample); // instant preview of the chosen voice
   }
 
   Future<void> _setSoundEnabled(bool value) async {
@@ -254,12 +292,6 @@ class _SettingsSectionState extends State<_SettingsSection> {
 
   Future<void> _setInstrumentSoundsEnabled(bool value) async {
     await _settings.setInstrumentSoundsEnabled(value);
-    if (!mounted) return;
-    setState(() {});
-  }
-
-  Future<void> _setNarrationEnabled(bool value) async {
-    await _settings.setNarrationEnabled(value);
     if (!mounted) return;
     setState(() {});
   }
@@ -303,7 +335,75 @@ class _SettingsSectionState extends State<_SettingsSection> {
           value: _settings.narrationEnabled,
           onChanged: _setNarrationEnabled,
         ),
+        if (_settings.narrationEnabled) _buildVoiceOptions(context),
       ],
+    );
+  }
+
+  /// The indented voice controls shown only while narration is on: a
+  /// reading-voice picker (Kid / Woman / Man), the auto-read toggle, and
+  /// a one-tap sample so a parent can hear the voice before choosing.
+  Widget _buildVoiceOptions(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final selected = _settings.voiceCharacter;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Reading voice',
+              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            children: [
+              for (final character in SpeechService.voiceCharacters)
+                ChoiceChip(
+                  key: ValueKey('voice_choice_$character'),
+                  selected: selected == character,
+                  onSelected: (_) => _selectVoice(character),
+                  showCheckmark: false,
+                  label: Text(
+                    '${_voiceLabels[character]!.$1}  '
+                    '${_voiceLabels[character]!.$2}',
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: selected == character
+                          ? Colors.white
+                          : AppColors.inkNavy,
+                    ),
+                  ),
+                  selectedColor: AppColors.skyBlue,
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey('voice_sample_button'),
+              onPressed: () => _speech.speak(_voiceSample),
+              icon: const Icon(Icons.volume_up_rounded,
+                  color: AppColors.skyBlue),
+              label: const Text('Hear a sample'),
+            ),
+          ),
+          SwitchListTile(
+            key: const ValueKey('auto_narration_toggle'),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Read aloud automatically'),
+            subtitle: const Text('Off: tap the speaker to hear a question'),
+            value: _settings.autoNarrationEnabled,
+            onChanged: _setAutoNarrationEnabled,
+          ),
+        ],
+      ),
     );
   }
 }

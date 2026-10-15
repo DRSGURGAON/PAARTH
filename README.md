@@ -680,35 +680,44 @@ finish:
   environment — run `flutter analyze` and `flutter test` locally and
   report anything red
 
-**Duolingo-style voice + feedback pass** — after a round of device
-testing, the game got a read-aloud voice, a friendlier wrong-answer
-panel, and a lesson progress bar, taking cues from Duolingo:
+**Duolingo-style voice + feedback (final, launch pass)** — after device
+testing, the game got a read-aloud voice with a choosable character, a
+calmer default, and a friendlier wrong-answer panel:
 
-- **Voice narration** — a new `SpeechService` (one file wrapping
-  `flutter_tts`, the only place it is touched) reads each prompt,
-  question and story line aloud in a gentle child-paced voice, and a
-  round 🔊 **Speaker** button lets the child hear it again. Emoji and
-  symbols are stripped before speaking, so a 🍌🍌🍌 visual never becomes
-  "banana banana banana" and "⭐" is never pronounced. Word Builder is
-  deliberately left silent (speaking the word would give away the
-  spelling). A new Parent Zone **Voice Narration** toggle controls it,
-  on top of the master sound switch; like every audio path it is a safe
-  no-op where no TTS engine exists, so tests and silent devices are
-  unaffected.
-- **Friendlier feedback, no more "yellow strip"** — the wrong-answer
+- **Voice narration, three voices.** A new `SpeechService` (one file
+  wrapping `flutter_tts`, the only place it is touched) reads prompts,
+  questions and story lines aloud. A parent picks the reading voice in
+  Parent Zone — **Kid 🧒 / Woman 👩 / Man 👨** — each shaped by pitch and
+  rate so it sounds distinct on *every* device (not dependent on which
+  system voices a given phone happens to have), with a one-tap "Hear a
+  sample" preview.
+- **Tap-to-hear by default; auto-read optional.** A 🔊 speaker sits in
+  each question screen's app bar — the child taps it to hear the
+  question. Reading does **not** happen on its own unless the parent
+  turns on **"Read aloud automatically"** (off by default, for a calmer
+  experience). Emoji/symbols are stripped first, so a 🍌🍌🍌 visual never
+  becomes "banana banana banana" and ⭐ is never pronounced. Word
+  Builder is deliberately silent (speaking the word would give away the
+  spelling). All of it is gated by a **Voice Narration** master toggle
+  on top of the master sound switch, and is a safe no-op where no TTS
+  engine exists, so silent devices and widget tests are unaffected.
+- **Friendlier feedback, no more "yellow strip".** The wrong-answer
   banner was a thin yellow-bordered card that read as a harsh strip on
-  every miss. It is now a soft coral panel that slides and fades up
-  into place with a friendly 💪 icon and a bold message — one warm,
+  every miss. It is now a soft coral panel that slides and fades up into
+  place with a friendly 💪 icon and a bold message — one warm,
   consistent look everywhere a miss happens (every mini-game, the quest
-  screen, the parent gate).
-- **Lesson progress bar** — each mini-game (and Word Builder) now shows
-  Duolingo's signature chunky progress bar at the top, filling smoothly
-  as the child advances, for a clear sense of momentum the bare "N / M"
-  chip didn't give.
+  screen, the parent gate), sized to its own content so it can never
+  overflow.
+- The read-aloud control lives in the app bar on purpose: it adds no
+  height to the already-tight quiz layouts, so no screen can overflow
+  (the exact class of bug device testing surfaced).
 - New dependency: `flutter_tts` (isolated behind `SpeechService`), the
-  second package added since Phase 1. New tests: `SpeechService`
-  gating + emoji-stripping, and the narration setting's default and
-  persistence.
+  second package added since Phase 1. New tests: `SpeechService` gating
+  (tap vs auto, master/narration off), emoji-stripping and the
+  three-voice roster; the voice/auto-read settings' defaults and
+  persistence; and widget tests that the voice picker appears under
+  narration, a chosen voice persists, auto-read defaults off, and the
+  app-bar speaker shows while playing.
 - Same honest limit: no Flutter SDK here — run `flutter pub get`,
   `flutter analyze` and `flutter test` locally after pulling.
 
